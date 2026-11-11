@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG PROVINCIAL CENTRES & REGIONAL WEATHER FORECAST - TONIGHT & TOMORROW</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="logoImage.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            text-align: center;
+            background-color: #198898;
+            color: #F7C310;
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #198898;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h4, p {
+            margin: 5px 0;
+        }
+        
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ECE8E0;
+            color: black;
+            min-width: 600px; /* Keeps table columns properly aligned and scrollable on small screens */
+        }
+
+        .table-bottom {
+            min-width: 100%;
+            background-color: transparent;
+            color: #F7C310;
+        }
+        
+        th, td {
+            border: 1px solid black;
+            padding: 6px;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        th {
+            background-color: #BDAF91;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #F7C310;
+            color: #333;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+            border-radius: 5px;
+            font-weight: bold;
+            touch-action: manipulation;
+        }
+        
+        button:hover {
+            background-color: #D9A30F;
+            transform: scale(1.03);
+        }
+        
+        .flex-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        
+        .datetime-field {
+            width: auto;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 6px;
+            font-size: 14px;
+        }
+        
+        .duty-input {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 6px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        .table-bottom td {
+            width: 50%;
+            vertical-align: middle;
+            border: none;
+        }
+        
+        .forecast-heading {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #F7C310;
+            justify-content: center;
+            margin: 0;
+        }
+        
+        select {
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            border: 1px solid #F7C310;
+            background-color: #198898;
+            color: #F7C310;
+            cursor: pointer;
+            appearance: none;
+            padding: 5px 10px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        
+        /* Column widths for .table-townscity */
+        .table-townscity th:nth-child(1), 
+        .table-townscity td:nth-child(1) {
+            width: 18%;
+        }
+        
+        .table-townscity th:nth-child(2), 
+        .table-townscity td:nth-child(2) {
+            width: 42%;
+        }
+        
+        .table-townscity th:nth-child(3), 
+        .table-townscity td:nth-child(3) {
+            width: 24%;
+        }
+        
+        .table-townscity th:nth-child(4), 
+        .table-townscity td:nth-child(4),
+        .table-townscity th:nth-child(5), 
+        .table-townscity td:nth-child(5) {
+            width: 8%;
+        }
+        
+        /* Column widths for .table-regions */
+        .table-regions th:nth-child(1), 
+        .table-regions td:nth-child(1) {
+            width: 25%;
+        }
+        
+        .table-regions th:nth-child(2), 
+        .table-regions td:nth-child(2) {
+            width: 75%;
+        }
+        
+        /* UTC label styling */
+        #utc-time {
+            width: auto;
+            display: inline-block;
+        }
+        
+        #utc-label {
+            display: inline-block;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        
+        .time-display {
+            font-weight: bold;
+            color: #F7C310;
+            background-color: #198898;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        /* Compact heading styles */
+        .compact-heading {
+            margin: 0;
+            line-height: 1.2;
+            font-size: 1.1rem;
+        }
+        
+        .compact-subheading {
+            margin: 3px 0;
+            line-height: 1.2;
+            font-size: 0.9rem;
+        }
+
+        #header5 {
+            margin-top: 10px;
+            margin-bottom: 0px;
+            line-height: 1.2;
+            color: whitesmoke;
+        }
+
+        #header6 {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            line-height: 1.2;
+            color: whitesmoke;
+        }
+        
+        #logo-cell-1,
+        #logo-cell-2 {
+            text-align: right; 
+        }
+        
+        #logo-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #logo-table th, 
+        #logo-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #logo-table col.col-1 { width: 30%; }
+        #logo-table col.col-2 { width: 40%; }
+        #logo-table col.col-3 { width: 30%; }
+
+        #logo-cell-1 img,
+        #logo-cell-2 img {
+            max-width: 120px;
+            max-height: 100px;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+        
+        .btn-action-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn-action-container button {
+            flex: 1 1 140px;
+            max-width: 250px;
+        }
+
+        .btn-generate {
+            background-color: #d93025;
+            color: white;
+        }
+        
+        .btn-save {
+            background-color: #34a853;
+            color: white;
+        }
+        
+        .btn-reset {
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .table-bottom tr, .table-bottom td {
+                display: block;
+                width: 100% !important;
+                padding: 5px 0;
+            }
+
+            .flex-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .datetime-field, .duty-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Forecast Time Display - Compact Version -->
+        <div class="info-box">
+            <h4 class="compact-heading">PNG PROVINCIAL CENTERS & REGIONAL FORECAST</h4>
+            <div class="forecast-heading">
+                <div style="color: #F7C310; font-weight: bold;">FOR TONIGHT AND TOMORROW</div>
+            </div>
+            <h5 class="compact-subheading" id="header5">PNG REGIONAL AND MAJOR TOWNS/CITIES FORECAST FOR THE NEXT 24 HOURS FROM:
+            <div class="time-display" id="timeDisplay">8:00 PM (LOCAL TIME)</div></h5>
+            <h5 class="compact-subheading" id="header6">AS ISSUED BY PAPUA NEW GUINEA NATIONAL WEATHER SERVICE</h5>
+        </div>
+        
+        <!-- Towns and Cities Forecast Table -->
+        <div class="table-responsive">
+            <table class="table-townscity">
+                <tr>
+                    <th>City/Town</th>
+                    <th>Weather</th>
+                    <th>Wind</th>
+                    <th>Max Temp (°C)</th>
+                    <th>Min Temp (°C)</th>
+                </tr>
+                
+                <!-- City rows -->
+                <tr>
+                    <td>Port Moresby</td>
+                    <td><input type="text" class="input-field" id="weather-pom" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-pom" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-pom" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-pom" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Lae</td>
+                    <td><input type="text" class="input-field" id="weather-lae" value="Rain showers"></td>
+                    <td><input type="text" class="input-field" id="wind-lae" value="Moderate SE Winds"></td>
+                    <td><input type="number" class="input-field" id="max-lae" value="29" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-lae" value="23" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Mt Hagen</td>
+                    <td><input type="text" class="input-field" id="weather-hagen" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-hagen" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-hagen" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-hagen" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Daru</td>
+                    <td><input type="text" class="input-field" id="weather-daru" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-daru" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-daru" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-daru" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Kerema</td>
+                    <td><input type="text" class="input-field" id="weather-kerema" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-kerema" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-kerema" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-kerema" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Alotau</td>
+                    <td><input type="text" class="input-field" id="weather-alotau" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-alotau" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-alotau" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-alotau" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Popondetta</td>
+                    <td><input type="text" class="input-field" id="weather-pop" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-pop" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-pop" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-pop" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Madang</td>
+                    <td><input type="text" class="input-field" id="weather-mdn" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-mdn" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-mdn" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-mdn" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Wewak</td>
+                    <td><input type="text" class="input-field" id="weather-wwk" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-wwk" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-wwk" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-wwk" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Vanimo</td>
+                    <td><input type="text" class="input-field" id="weather-van" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-van" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-van" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-van" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Lorengau</td>
+                    <td><input type="text" class="input-field" id="weather-lorengau" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-lorengau" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-lorengau" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-lorengau" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Kavieng</td>
+                    <td><input type="text" class="input-field" id="weather-Kav" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-kav" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-kav" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-kav" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Kokopo</td>
+                    <td><input type="text" class="input-field" id="weather-kokopo" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-kokopo" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-kokopo" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-kokopo" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Kimbe</td>
+                    <td><input type="text" class="input-field" id="weather-kimbe" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-kimbe" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-kimbe" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-kimbe" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Buka</td>
+                    <td><input type="text" class="input-field" id="weather-buka" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-buka" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-buka" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-buka" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Goroka</td>
+                    <td><input type="text" class="input-field" id="weather-goroka" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-goroka" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-goroka" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-goroka" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Kundiawa</td>
+                    <td><input type="text" class="input-field" id="weather-kundiawa" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-kundiawa" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-kundiawa" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-kundiawa" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Banz</td>
+                    <td><input type="text" class="input-field" id="weather-banz" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-banz" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-banz" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-banz" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Wabag</td>
+                    <td><input type="text" class="input-field" id="weather-wabag" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-wabag" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-wabag" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-wabag" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Mendi</td>
+                    <td><input type="text" class="input-field" id="weather-mendi" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-mendi" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-mendi" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-mendi" value="24" min="0" max="50"></td>
+                </tr>
+                
+                <tr>
+                    <td>Tari</td>
+                    <td><input type="text" class="input-field" id="weather-tari" value="Partly cloudy"></td>
+                    <td><input type="text" class="input-field" id="wind-tari" value="Light NW Winds"></td>
+                    <td><input type="number" class="input-field" id="max-tari" value="31" min="0" max="50"></td>
+                    <td><input type="number" class="input-field" id="min-tari" value="24" min="0" max="50"></td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Regional Weather Forecast Table -->
+        <h4>Regional Weather Forecast</h4>
+        <div class="table-responsive">
+            <table class="table-regions">
+                <tr>
+                    <th>Region</th>
+                    <th>Weather Information</th>
+                </tr>
+                <tr>
+                    <td>Southern</td>
+                    <td><input type="text" class="input-field" id="region-southern" value="Isolated showers and thunderstorms,"></td>
+                </tr>
+                <tr>
+                    <td>Momase</td>
+                    <td><input type="text" class="input-field" id="region-Momase" value="Scattered showers and isolated thunderstorms"></td>
+                </tr>
+                <tr>
+                    <td>New Guinea Islands</td>
+                    <td><input type="text" class="input-field" id="region-Guinea Islands" value="Isolated showers and thunderstorms."></td>
+                </tr>
+                <tr>
+                    <td>Highlands</td>
+                    <td><input type="text" class="input-field" id="region-highlands" value="Scattered fog, then Scattered showers and thunderstorms with areas of rain."></td>
+                </tr>
+            </table>
+        </div>
+        
+        <p><em>NB: Squally or gusty winds are expected in severe thunderstorms.</em></p>
+        
+        <!-- Date/Time and Duty Forecaster Section -->
+        <table class="table-bottom">
+            <tr>
+                <td>
+                    <div class="flex-container">
+                        <label for="date-picker">Date/Time:</label>
+                        <input type="date" id="date-picker" class="datetime-field" onchange="updateUTC()">
+                        <input type="time" id="time-picker" class="datetime-field" onchange="updateUTC()">
+                        <input type="text" id="utc-time" class="datetime-field" placeholder="UTC Time" readonly> 
+                    </div>
+                </td>
+                <td>
+                    <div class="flex-container">
+                        <label for="duty-forecaster">Duty Forecaster:</label>
+                        <input type="text" id="duty-forecaster" class="duty-input">
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Generate PDF Button -->
+        <div class="btn-action-container">
+            <button id="btn-generate" class="btn-generate" onclick="generatePDF()">Generate PDF</button>
+            <button id="btn-save" class="btn-save" onclick="saveData()">Save</button>
+            <button id="btn-reset" class="btn-reset" onclick="resetData()">Reset</button>
+        </div>
+    </div>
+    
+    <script>
+    // Set initial time based on fixed period selection
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTime();
+        // Set current date as default
+        const today = new Date();
+        const formattedDate = today.toISOString().substr(0, 10);
+        document.getElementById('date-picker').value = formattedDate;
+        
+        // Set current time as default
+        const now = new Date();
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('time-picker').value = `${hours}:${minutes}`;
+        
+        updateUTC();
+    });
+
+    // Update time display based on fixed period selection
+    function updateTime() {
+        const timeDisplay = document.getElementById('timeDisplay');
+        timeDisplay.textContent = "8:00 PM (LOCAL TIME)";
+    }
+
+    // Validate form inputs
+    function validateForm() {
+        const dutyForecaster = document.getElementById('duty-forecaster').value;
+        if (!dutyForecaster) {
+            alert("Please enter the Duty Forecaster's name.");
+            return false;
+        }
+        return true;
+    }
+
+    // Update UTC time based on selected date/time
+    function updateUTC() {
+        const localDate = document.getElementById('date-picker').value;
+        const localTime = document.getElementById('time-picker').value;
+        
+        if (!localDate || !localTime) {
+            return;
+        }
+
+        const localDateTime = new Date(localDate + 'T' + localTime + ':00');
+        const utcDate = new Date(localDateTime.toISOString());
+        
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const hour = String(utcDate.getUTCHours()).padStart(2, '0');
+        const minute = String(utcDate.getUTCMinutes()).padStart(2, '0');
+
+        const utcTime = `${day}${hour}${minute} UTC`;
+        document.getElementById('utc-time').value = utcTime;
+    }
+
+    // === PDF GENERATION ===
+    function generatePDF() {
+        if (!validateForm()) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+
+        // === HEADER ===
+        let headerY = 5; 
+
+        if (typeof img1 !== "undefined" && img1) {
+            doc.addImage(img1, "PNG", 10, headerY, 25, 20);
+        }
+        if (typeof img2 !== "undefined" && img2) {
+            doc.addImage(img2, "PNG", pageWidth - 35, headerY, 25, 17);
+        }
+
+        doc.setFontSize(12);
+        doc.setFont(undefined, "bold");
+        doc.setTextColor(0, 139, 139); 
+        doc.text("PAPUA NEW GUINEA NATIONAL WEATHER SERVICE", pageWidth / 2, headerY + 5, { align: "center" });
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, "normal");
+        doc.text("P.O. Box 1240, BOROKO, National Capital District, Papua New Guinea", pageWidth / 2, headerY + 10, { align: "center" });
+        doc.text("Telephone: (+675) 325 2788 or (+675) 325 5544    email: png.nws@gmail.com", pageWidth / 2, headerY + 14, { align: "center" });
+        doc.text("Website: www.pngmet.gov.pg", pageWidth / 2, headerY + 18, { align: "center" });
+
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(0, 139, 139);
+        doc.setGState(new doc.GState({ opacity: 0.5 }));
+        doc.line(10, headerY + 22, pageWidth - 10, headerY + 22);
+        doc.setGState(new doc.GState({ opacity: 1 }));
+
+        let y = headerY + 28; 
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(0, 0, 0); 
+        doc.text("ZCZC GPNG.", 10, y);
+
+        const mediaText = "MEDIA: EMTV, AM & FM RADIOS AND NMSA.";
+        doc.text(mediaText, pageWidth / 2, y, { align: "center" });
+
+        const currentDate = new Date().toLocaleDateString("en-GB", { day: 'numeric', month: 'long', year: 'numeric' });
+        const dateWidth = doc.getTextWidth(currentDate);
+        doc.text(currentDate, pageWidth - 10 - dateWidth, y);
+
+        const mainTitle = "PNG PROVINCIAL CENTERS & REGIONAL FORECAST";
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0); 
+        doc.text(mainTitle, pageWidth / 2, y + 6, { align: "center" });
+
+        doc.setFontSize(10);
+        doc.text("FOR: TONIGHT AND TOMORROW", pageWidth / 2, y + 11, { align: "center" });
+
+        doc.setFontSize(9);
+        doc.text("FORECAST FOR NEXT 24 HOURS VALID AT 8:00 PM (LOCAL TIME) AS ISSUED BY PNGNWS", pageWidth / 2, y + 16, { align: "center" });
+
+        y += 28;
+        doc.setFontSize(10);
+        doc.text("TOWNS AND CITIES FORECAST", 10, y);
+        y += 4;
+
+        const townRows = document.querySelectorAll('.table-townscity tr');
+        townRows.forEach((row, index) => {
+            if (index === 0) return;
+            const townName = row.querySelector('td').textContent.toUpperCase();
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${townName}:`, 10, y);
+            y += 3;
+
+            const inputs = row.querySelectorAll('input');
+            const weather = inputs[0].value;
+            const wind = inputs[1].value;
+            const maxTemp = inputs[2].value;
+            const minTemp = inputs[3].value;
+
+            const specialTowns = ["PORT MORESBY", "LAE", "MT HAGEN"];
+            if (specialTowns.includes(townName)) {
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text(`${weather}.`, 10, y); y += 3;
+                doc.text(`${wind}.`, 10, y); y += 3;
+                doc.text(`Max:${maxTemp}°C, Min:${minTemp}°C.`, 10, y); y += 4;
+            } else {
+                const weatherDetails = `${weather}, ${wind}, Max:${maxTemp}°C, Min:${minTemp}°C.`;
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text(weatherDetails, 10, y); y += 4;
+            }
+        });
+
+        y += 5;
+        doc.setFontSize(10);
+        doc.text("REGIONAL WEATHER FORECAST", 10, y);
+        y += 4;
+
+        const regionRows = document.querySelectorAll('.table-regions tr');
+        regionRows.forEach((row, index) => {
+            if (index === 0) return;
+            const regionName = row.querySelector('td').textContent.toUpperCase();
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${regionName}:`, 10, y);
+            y += 3;
+
+            const weatherInfo = row.querySelector('input').value;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${weatherInfo}.`, 10, y);
+            y += 4;
+        });
+
+        y += 5;
+        const nbText = "NB: Squally or gusty winds are expected to accompany areas with severe thunderstorms.";
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'italic');
+        doc.text(nbText, 10, y);
+        y += 4;
+
+        const dutyForecaster = document.getElementById('duty-forecaster').value;
+        const datePicker = document.getElementById('date-picker').value;
+        const timePicker = document.getElementById('time-picker').value;
+        const utcTime = document.getElementById('utc-time').value;
+
+        const formattedDate = formatDateDDMMYYYY(datePicker);
+        const formattedTime = formatTimeWithAMPM(timePicker);
+
+        const footerY = y + 10; 
+        const footerText = `DATE/TIME: ${formattedDate}    ${formattedTime}    ${utcTime} |  DUTY FORECASTER: ${dutyForecaster}`;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(footerText, 10, footerY);
+
+        doc.setFontSize(10);
+        doc.text("NNNN", 10, footerY + 5);
+
+        const dateParts = datePicker ? datePicker.split('-') : [];
+        const ddmmyy = dateParts.length === 3 ? `${dateParts[2]}${dateParts[1]}${dateParts[0].slice(-2)}` : 'currentdate';
+        const fileName = `PNG Towns WeatherForecast for Tonight [${ddmmyy}].pdf`;
+
+        doc.save(fileName);
+    }
+
+    function formatTimeWithAMPM(time) {
+        const [hour, minute] = time.split(':');
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12;
+        return `${formattedHour}:${minute} ${period}`;
+    }
+
+    function formatDateDDMMYYYY(date) {
+        const [year, month, day] = date.split('-');
+        return `${day}-${month}-${year}`;
+    }
+
+    // === SAVE, LOAD, RESET FUNCTIONS ===
+    function saveData() {
+        const allInputs = document.querySelectorAll('input, select');
+        const data = {};
+
+        allInputs.forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                data[input.id] = input.checked;
+            } else {
+                data[input.id] = input.value;
+            }
+        });
+
+        localStorage.setItem('pubwxdata_tonight', JSON.stringify(data));
+        alert("✅ Data saved successfully!");
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('pubwxdata_tonight');
+        if (!saved) return;
+
+        const data = JSON.parse(saved);
+        Object.keys(data).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = data[id];
+                } else {
+                    el.value = data[id];
+                }
+            }
+        });
+
+        updateTime(); 
+        updateUTC();  
+    }
+
+    function resetData() {
+        if (confirm("⚠️ This will reset all fields to default values. Continue?")) {
+            localStorage.removeItem('pubwxdata_tonight');
+            location.reload();
+        }
+    }
+
+    window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>

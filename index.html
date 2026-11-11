@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public Weather Templates Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ===== BODY & LAYOUT ===== */
+body.pubwx-body {
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a2a6c 0%, #2c3e50 100%);
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.pubwx-sidebar {
+  width: 300px;
+  background: rgba(13, 23, 33, 0.95);
+  color: white;
+  height: 100vh;
+  overflow-y: auto;
+  box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.pubwx-sidebar-header {
+  padding: 25px 20px;
+  font-size: 22px;
+  font-weight: bold;
+  background: #0c151f;
+  border-bottom: 1px solid #1e2b3b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pubwx-sidebar-header i {
+  color: #4fc3f7;
+}
+
+.pubwx-main-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+
+.pubwx-time-tab {
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 5px solid transparent;
+}
+
+.pubwx-warning {
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 5px solid transparent;
+  border-top: 2px solid #1e2b3b;
+}
+
+.pubwx-time-tab:hover {
+  background: #1e2b3b;
+}
+
+.pubwx-time-tab.active {
+  background: #1e2b3b;
+  border-left: 5px solid #4fc3f7;
+}
+
+.pubwx-time-tab i { transition: transform 0.3s ease; }
+.pubwx-time-tab.active i.fa-chevron-right { transform: rotate(90deg); }
+
+/* ===== FIRST-LEVEL SUBTABS ===== */
+.pubwx-template-subtabs {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #15202b;
+}
+
+.pubwx-template-tab {
+  padding: 12px 25px 12px 45px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pubwx-template-tab:hover { background: #253446; }
+.pubwx-template-tab.active { background: #253446; color: #4fc3f7; }
+
+/* ===== MINOR CENTERS NESTED ACCORDION STYLES ===== */
+.pubwx-template-tab.pubwx-has-nested i.fa-chevron-right {
+  transition: transform 0.3s ease;
+  font-size: 12px;
+}
+
+.pubwx-template-tab.pubwx-has-nested.open i.fa-chevron-right {
+  transform: rotate(90deg);
+}
+
+.pubwx-nested-subtabs {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #0f1720;
+}
+
+.pubwx-nested-tab {
+  padding: 10px 25px 10px 65px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #c2c9d1;
+}
+
+.pubwx-nested-tab:hover {
+  background: #1e2d3d;
+  color: #ffffff;
+}
+
+.pubwx-nested-tab.active {
+  background: #1e2d3d;
+  color: #4fc3f7;
+  font-weight: bold;
+}
+
+/* ===== CONTENT AREA ===== */
+.pubwx-content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #14707B;
+  background-size: cover;
+  padding: 30px;
+}
+
+.pubwx-content-inner {
+  width: 1200px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  padding: 30px;
+  min-height: 80vh;
+}
+
+.pubwx-content-inner iframe {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+/* ===== RESPONSIVE LAYOUT ===== */
+
+/* Keep the dashboard within the available screen width */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body.pubwx-body {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+}
+
+body.pubwx-body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.pubwx-sidebar {
+  min-width: 0;
+}
+
+.pubwx-content-area {
+  min-width: 0;
+}
+
+.pubwx-content-inner {
+  width: 100%;
+  max-width: 1200px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.pubwx-content-inner iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Medium screens and tablets */
+@media (max-width: 1024px) {
+  .pubwx-sidebar {
+    width: 260px;
+  }
+
+  .pubwx-content-area {
+    padding: 18px;
+  }
+
+  .pubwx-content-inner {
+    padding: 20px;
+  }
+}
+
+/* Phones and narrow tablets */
+@media (max-width: 768px) {
+  body.pubwx-body {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pubwx-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 42vh;
+    max-height: 42dvh;
+    flex: 0 0 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Do not rely on :hover: phones and tablets are touch devices */
+  .pubwx-sidebar:hover {
+    max-height: 42vh;
+    max-height: 42dvh;
+  }
+
+  .pubwx-sidebar > div:first-child {
+    margin: 8px auto 0 !important;
+    text-align: center;
+  }
+
+  .pubwx-sidebar > div:first-child img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+  }
+
+  .pubwx-sidebar-header {
+    justify-content: center;
+    padding: 12px 14px;
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .pubwx-time-tab {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+
+  .pubwx-template-tab {
+    min-height: 44px;
+    padding: 11px 16px 11px 30px;
+  }
+
+  .pubwx-nested-tab {
+    min-height: 42px;
+    padding: 10px 16px 10px 42px;
+  }
+
+  .pubwx-content-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 10px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pubwx-content-inner {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .pubwx-content-inner iframe {
+    width: 100%;
+    min-width: 0;
+    border-radius: 6px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .pubwx-sidebar {
+    max-height: 45vh;
+    max-height: 45dvh;
+  }
+
+  .pubwx-sidebar:hover {
+    max-height: 45vh;
+    max-height: 45dvh;
+  }
+
+  .pubwx-sidebar-header {
+    font-size: 16px;
+  }
+
+  .pubwx-time-tab {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .pubwx-template-tab {
+    padding-left: 22px;
+    font-size: 13px;
+  }
+
+  .pubwx-nested-tab {
+    padding-left: 32px;
+    font-size: 12px;
+  }
+
+  .pubwx-content-area {
+    padding: 6px;
+  }
+
+  .pubwx-content-inner {
+    padding: 8px;
+  }
+}
+
+.pubwx-logo {
+  width: 250px;
+  height: 200px;
+  object-fit: contain;
+  margin-right: 30px;
+  border-radius: 5px;
+}
+</style>
+</head>
+<body class="pubwx-body">
+
+<!-- ===== SIDEBAR ===== -->
+<div class="pubwx-sidebar">
+  <div style="margin-bottom: 0px; margin-left: 70px; align-items: center;">
+    <img src="logo.png" width="120" height="120" alt=""/> 
+  </div>
+	
+  <div class="pubwx-sidebar-header">
+    <span style="text-align: center;">Public Weather Templates</span>
+  </div>
+
+  <div class="pubwx-main-menu">
+
+    <!-- DOGGO SHIFT -->
+    <div class="pubwx-time-tab" data-shift="doggo">
+      <span><i class="fas fa-moon"></i> DOGO SHIFT</span>
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <div class="pubwx-template-subtabs">
+      <div class="pubwx-template-tab" data-file="doggo_towns.html"><span><i class="fas fa-city"></i> PNG Main Towns & Cities</span></div>
+      <div class="pubwx-template-tab" data-file="doggo_coastal.html"><span><i class="fas fa-water"></i> PNG Coastal Waters</span></div>
+      <div class="pubwx-template-tab" data-file="doggo_ocean.html"><span><i class="fas fa-ship"></i> PNG Ocean Waters</span></div>
+      
+      <!-- MINOR CENTERS NESTED ACCORDION -->
+      <div class="pubwx-template-tab pubwx-has-nested">
+        <span><i class="fas fa-map-marker-alt"></i> Minor Centers</span>
+        <i class="fas fa-chevron-right"></i>
+      </div>
+      <div class="pubwx-nested-subtabs">
+        <div class="pubwx-nested-tab" data-file="doggo_central.html"><i class="fas fa-map-pin"></i> Central Province</div>
+        <div class="pubwx-nested-tab" data-file="doggo_milnebay.html"><i class="fas fa-map-pin"></i> Milne Bay</div>
+        <div class="pubwx-nested-tab" data-file="doggo_morobe.html"><i class="fas fa-map-pin"></i> Morobe</div>
+        <div class="pubwx-nested-tab" data-file="doggo_ngi.html"><i class="fas fa-map-pin"></i> NGI Region</div>
+        <div class="pubwx-nested-tab" data-file="doggo_minor_area5.html"><i class="fas fa-map-pin"></i> Area 5</div>
+        <div class="pubwx-nested-tab" data-file="doggo_minor_area6.html"><i class="fas fa-map-pin"></i> Area 6</div>
+      </div>
+    </div>
+
+    <!-- MORNING SHIFT -->
+    <div class="pubwx-time-tab" data-shift="morning">
+      <span><i class="fas fa-sun"></i> MORNING SHIFT</span>
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <div class="pubwx-template-subtabs">
+      <div class="pubwx-template-tab" data-file="morning_towns.html"><span><i class="fas fa-city"></i> PNG Main Towns & Cities</span></div>
+      <div class="pubwx-template-tab" data-file="morning_coastal.html"><span><i class="fas fa-water"></i> PNG Coastal Waters</span></div>
+      <div class="pubwx-template-tab" data-file="morning_ocean.html"><span><i class="fas fa-ship"></i> PNG Ocean Waters</span></div>
+      
+      <!-- MINOR CENTERS NESTED ACCORDION LEFT BLANK -->
+
+    </div>
+
+    <!-- AFTERNOON SHIFT -->
+    <div class="pubwx-time-tab" data-shift="afternoon">
+      <span><i class="fas fa-cloud-sun-rain"></i> AFTERNOON SHIFT</span>
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <div class="pubwx-template-subtabs">
+      <div class="pubwx-template-tab" data-file="afternoon_towns.html"><span><i class="fas fa-city"></i> PNG Main Towns & Cities</span></div>
+      <div class="pubwx-template-tab" data-file="afternoon_coastal.html"><span><i class="fas fa-water"></i> PNG Coastal Waters</span></div>
+      <div class="pubwx-template-tab" data-file="afternoon_ocean.html"><span><i class="fas fa-ship"></i> PNG Ocean Waters</span></div>
+      
+      <!-- MINOR CENTERS NESTED ACCORDION -->
+      <div class="pubwx-template-tab pubwx-has-nested">
+        <span><i class="fas fa-map-marker-alt"></i> Minor Centers</span>
+        <i class="fas fa-chevron-right"></i>
+      </div>
+      <div class="pubwx-nested-subtabs">
+        <div class="pubwx-nested-tab" data-file="afternoon_central.html"><i class="fas fa-map-pin"></i> Central Province</div>
+        <div class="pubwx-nested-tab" data-file="afternoon_milnebay.html"><i class="fas fa-map-pin"></i> Milne Bay</div>
+        <div class="pubwx-nested-tab" data-file="afternoon_morobe.html"><i class="fas fa-map-pin"></i> Morobe</div>
+        <div class="pubwx-nested-tab" data-file="afternoon_ngi.html"><i class="fas fa-map-pin"></i> NGI Region</div>
+        <div class="pubwx-nested-tab" data-file="afternoon_milnebay.html"><i class="fas fa-map-pin"></i> Area 5</div>
+        <div class="pubwx-nested-tab" data-file="afternoon_milnebay.html"><i class="fas fa-map-pin"></i> Area 6</div>
+      </div>
+    </div>
+	  
+    <!-- WARNINGS & ADVISORIES -->
+    <div class="pubwx-time-tab pubwx-warning" data-shift="warnings">
+      <span><i class="fas fa-exclamation-triangle"></i> WARNINGS & ADVISORIES</span>
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <div class="pubwx-template-subtabs">
+      <div class="pubwx-template-tab" data-file="warning_strong_wind.html"><span><i class="fas fa-wind"></i> STRONG WIND</span></div>
+      <div class="pubwx-template-tab" data-file="warning_gale_force.html"><span><i class="fas fa-water"></i> GALE FORCE</span></div>
+      <div class="pubwx-template-tab" data-file="warning_heavy_rain.html"><span><i class="fas fa-cloud-showers-heavy"></i> HEAVY RAINFALL AND FLOOD</span></div>
+      <div class="pubwx-template-tab" data-file="warning_storm_surge.html"><span><i class="fas fa-hurricane"></i> STORM SURGE</span></div>
+		<div class="pubwx-template-tab" data-file="public_weather.html"><span><i class="fas fa-hurricane"></i>MAP</span></div>
+    </div>
+	  
+  </div>
+</div>
+
+<!-- ===== CONTENT AREA ===== -->
+<div class="pubwx-content-area">
+  <div id="pubwx-content" class="pubwx-content-inner">
+    <h2>Welcome to the Public Weather Templates Dashboard</h2>
+    <p>Select a shift and template from the sidebar to view data.</p>
+  </div>
+</div>
+
+<!-- ===== SCRIPT ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const timeTabs = document.querySelectorAll('.pubwx-time-tab');
+  const templateTabs = document.querySelectorAll('.pubwx-template-tab');
+  const nestedTabs = document.querySelectorAll('.pubwx-nested-tab');
+  const contentArea = document.getElementById('pubwx-content');
+
+  // Recalculates height of parent subtabs container so items push down seamlessly
+  function resizeParentContainer(element) {
+    const parentContainer = element.closest('.pubwx-template-subtabs');
+    if (parentContainer) {
+      // Temporarily set to max content height
+      parentContainer.style.maxHeight = parentContainer.scrollHeight + 300 + 'px';
+    }
+  }
+
+  // 1. Shift Tab Accordions
+  timeTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const isActive = tab.classList.contains('active');
+      
+      // Reset all shifts
+      timeTabs.forEach(t => {
+        t.classList.remove('active');
+        const subtabs = t.nextElementSibling;
+        if (subtabs && subtabs.classList.contains('pubwx-template-subtabs')) {
+          subtabs.style.maxHeight = null;
+        }
+      });
+
+      // Reset any nested minor center accordions when switching main shifts
+      document.querySelectorAll('.pubwx-has-nested').forEach(n => n.classList.remove('open'));
+      document.querySelectorAll('.pubwx-nested-subtabs').forEach(ns => ns.style.maxHeight = null);
+
+      if (!isActive) {
+        tab.classList.add('active');
+        const currentSubtabs = tab.nextElementSibling;
+        if (currentSubtabs && currentSubtabs.classList.contains('pubwx-template-subtabs')) {
+          currentSubtabs.style.maxHeight = currentSubtabs.scrollHeight + 'px';
+        }
+      }
+    });
+  });
+
+  // 2. Template Tab Click & Minor Centers Dropdown Toggle
+  templateTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      if (tab.classList.contains('pubwx-has-nested')) {
+        e.stopPropagation();
+        const nestedSubtabs = tab.nextElementSibling;
+        const isOpen = tab.classList.contains('open');
+
+        if (isOpen) {
+          tab.classList.remove('open');
+          nestedSubtabs.style.maxHeight = null;
+          
+          // Re-adjust parent height after closing nested menu
+          setTimeout(() => {
+            const parentContainer = tab.closest('.pubwx-template-subtabs');
+            if (parentContainer) {
+              parentContainer.style.maxHeight = parentContainer.scrollHeight + 'px';
+            }
+          }, 300);
+        } else {
+          tab.classList.add('open');
+          nestedSubtabs.style.maxHeight = nestedSubtabs.scrollHeight + 'px';
+          
+          // Expand parent container height to make space for children pushing down
+          resizeParentContainer(nestedSubtabs);
+        }
+        return;
+      }
+
+      templateTabs.forEach(t => t.classList.remove('active'));
+      nestedTabs.forEach(nt => nt.classList.remove('active'));
+      tab.classList.add('active');
+      
+      if (tab.dataset.file) {
+        loadTemplate(tab.dataset.file);
+      }
+    });
+  });
+
+  // 3. Sub-level Option Clicks (Central, Milne Bay, Morobe, NGI, Area 5, Area 6)
+  nestedTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.stopPropagation();
+      templateTabs.forEach(t => t.classList.remove('active'));
+      nestedTabs.forEach(nt => nt.classList.remove('active'));
+      
+      tab.classList.add('active');
+      if (tab.dataset.file) {
+        loadTemplate(tab.dataset.file);
+      }
+    });
+  });
+
+  // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+
+	
+// Load complete weather template inside an iframe
+function loadTemplate(file) {
+
+    // Clear previous template
+    contentArea.innerHTML = '';
+
+    // Create iframe
+    const iframe = document.createElement('iframe');
+
+    // Load the complete HTML document
+    iframe.src = file;
+
+    iframe.style.width = '100%';
+    iframe.style.minHeight = '1100px';
+    iframe.style.border = 'none';
+    iframe.style.display = 'block';
+
+    iframe.setAttribute('title', 'Public Weather Template');
+
+    // Insert iframe into dashboard
+    contentArea.appendChild(iframe);
+
+    // Adjust height after template loads
+    iframe.onload = function() {
+        try {
+            const iframeHeight =
+                iframe.contentWindow.document.body.scrollHeight;
+
+            iframe.style.height = Math.max(1100, iframeHeight) + 'px';
+
+        } catch (error) {
+            iframe.style.height = '1100px';
+        }
+    };
+}
+
+	
+});
+</script>
+
+</body>
+</html>

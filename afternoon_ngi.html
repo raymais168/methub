@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Guinea Islands Regional Weather Forecast</title>
+  <script src="logoImage.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f4f4f8;
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      margin: 0;
+      padding: 10px;
+    }  
+
+    .container {
+      max-width: 1024px;
+      width: 100%;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0px;
+      margin-left: 70px;
+      margin-right: 70px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+
+    td {
+      padding: 0px;
+      margin: 0;
+      border: 0px solid black;
+      text-align: left;
+    }
+
+    td:first-child {
+      white-space: nowrap;
+    }
+
+    td:last-child {
+      width: 100%;
+    }
+
+    .warnings {
+      font-size: 16px;
+    }
+
+    .bullet-textbox {
+      width: 90%;
+      min-height: 1.2em;
+      border: none;
+      padding: 0;
+      font-size: 14px;
+      font-style: italic;
+      font-family: "Times New Roman", Times, serif;
+      outline: none;
+      line-height: 1.2em;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: hidden;
+      margin-left: 70px;
+    }
+
+    .bullet-textbox ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .bullet-textbox li {
+      list-style-type: disc;
+    }
+
+    .clickable {
+      cursor: pointer;
+      margin: 0px;
+      display: inline-block;
+      color: black;
+      text-decoration: none;
+    }
+
+    .dropdown {
+      position: absolute;
+      display: none;
+      background-color: greenyellow;
+      border: 1px solid #ccc;
+      min-width: 150px;
+      z-index: 1000;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .dropdown .option {
+      padding: 8px 12px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .dropdown .option:hover {
+      background-color: #108BB7;
+    }
+
+    .arrow {
+      float: right;
+    }
+
+    .submenu {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background-color: greenyellow;
+      border: 1px solid #ccc;
+      min-width: 180px;
+      border-radius: 4px;
+    }
+
+    .option:hover > .submenu {
+      display: block;
+    }
+
+    .submenu .suboption {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .submenu .suboption:hover {
+      background-color: #108BB7;
+    }
+
+    .cell-content {
+      display: flex;
+      gap: 5px;
+      width: 100%;
+    }
+
+    .editable {
+      outline: none;
+      padding: 2px;
+    }
+
+    .first {
+      flex: 0 1 auto;
+      min-width: 20px;
+    }
+
+    .remaining {
+      flex: 1;
+      min-width: 20px;
+    }
+
+    .row {
+      display: flex;
+      width: 100%;
+      border: 0px solid gray;
+    }
+
+    .div1 {
+      white-space: nowrap;
+      padding: 0px;
+    }
+
+    .div2 {
+      flex: 1;
+      padding: 0px 4px;
+      border-left: 0px solid gray;
+      white-space: nowrap;
+      overflow: hidden;
+      cursor: text;
+      transition: background-color 0.2s ease;
+    }
+
+    .div2[contenteditable="true"]:hover,
+    .div2[contenteditable="true"]:focus {
+      background-color: #f0f0f0;
+      outline: none;
+    }
+
+    .editor {
+      width: 100%;
+      min-height: 20px;
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #fff;
+      outline: none;
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      font-style: italic;
+      transition: background-color 0.2s ease;
+    }
+
+    .editor .line {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      padding: 0;
+    }
+
+    .editor .line:focus {
+      background-color: #f0f0f0;
+    }
+
+    .editor .item {
+      display: flex;
+      align-items: flex-start;
+      margin: 0;
+      padding: 0;
+      line-height: 1.05;
+      gap: 6px;
+    }
+
+    .editor .marker {
+      user-select: none;
+      flex: 0 0 14px;
+      display: inline-block;
+      transform: translateY(1px);
+    }
+
+    .time-picker {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1001;
+      display: none;
+    }
+
+    .time-picker select {
+      margin: 0 5px;
+      padding: 5px;
+    }
+
+    .time-picker button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .save-status {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: green;
+      height: 20px;
+    }
+/* MINOR TABLES STYLING */  
+   /* Page styling */
+    .minor-weather-body {
+      background: #f4f4f8;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin: 0;
+      padding: 0;
+    }  
+    
+    /* Minor table styling */
+    .minor-weather-table {
+      width: 90%;
+      border-collapse: collapse;
+      margin: auto;
+    }
+    
+    /* Table cell styling */
+    .minor-weather-table th, 
+    .minor-weather-table td {
+      border: 1px solid #333;
+      text-align: center;
+      padding: 2px;
+      height: 15px;
+      line-height: 15px;
+    }
+    
+    /* Column widths */
+    .minor-weather-table col:nth-child(1)  { width: 4%; }
+    .minor-weather-table col:nth-child(2)  { width: 4%; }
+    .minor-weather-table col:nth-child(3)  { width: 2%; }
+    .minor-weather-table col:nth-child(4)  { width: 10%; }
+    .minor-weather-table col:nth-child(5)  { width: 10%; }
+    .minor-weather-table col:nth-child(6)  { width: 10%; }
+    .minor-weather-table col:nth-child(7)  { width: 10%; }
+    .minor-weather-table col:nth-child(8)  { width: 4%; }
+    .minor-weather-table col:nth-child(9)  { width: 4%; }
+    .minor-weather-table col:nth-child(10) { width: 2%; }
+    .minor-weather-table col:nth-child(11) { width: 10%; }
+    .minor-weather-table col:nth-child(12) { width: 10%; }
+    .minor-weather-table col:nth-child(13) { width: 10%; }
+    .minor-weather-table col:nth-child(14) { width: 10%; }
+    
+    /* Editable note styling */
+    .minor-note-line {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      min-height: 1em;
+      padding: 1px 4px;
+      margin: 1px 0;
+      font-size: 15px;
+      line-height: 1.1em;
+      outline: none;
+      background: transparent;
+      white-space: pre-wrap;
+      caret-color: #000;
+      transition: background-color 0.15s ease;
+    }
+
+    /* Highlight when hovered */
+    .minor-note-line:hover {
+      background-color: #e6f8e6;
+      cursor: text;
+    }
+
+    /* Slightly brighter highlight when focused */
+    .minor-note-line:focus {
+      background-color: #d9f2d9;
+    }
+
+    /* Placeholder text */
+    .minor-note-line:empty:before {
+      content: attr(data-placeholder);
+      color: #999;
+      pointer-events: none;
+    }
+
+    /* Hint text styling */
+    .minor-hint {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    
+    /* Temperature styling */
+    .minor-temp-value {
+      display: inline-block;
+      min-width: 20px;
+      text-align: center;
+      background-color: #f0f8ff;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+    
+    /* Bold text styling */
+    .minor-bold-text {
+      font-weight: bold;
+    }
+    
+    /* Region header styling */
+    .minor-region-header {
+      text-align: left;
+      border-bottom: none;
+      background-color: #e9f7e9;
+      padding: 4px 8px;
+    }
+    
+    /* Center aligned text */
+    .minor-center-text {
+      text-align: center;
+    }
+    
+    /* No border styling */
+    .minor-no-border {
+      border: none;
+    }
+    
+    /* No top border */
+    .minor-no-top-border {
+      border-top: none;
+    }
+    
+    /* No bottom border */
+    .minor-no-bottom-border {
+      border-bottom: none;
+    }
+    
+    /* Area header styling */
+    .minor-area-header {
+      background-color: #f0f8f0;
+      padding: 4px;
+    }
+
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 4px;
+      }
+      .container {
+        padding: 10px;
+        margin: 5px auto;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+	<div class="page">
+
+  <div class="top-header"><h4>ZCZC GOPNG</h4> <h4 id="currentDayDate"><span id="current-Date"></span></h4></div>
+  <h3 style="text-align: center;margin-top: 0px; margin-bottom: 0px;">NEW GUINEA ISLANDS REGIONAL WEATHER FORECASTS</h3>
+  <h3 style="text-align: center; margin-top: 1px;">FOR TONIGHT TO TOMORROW</h3> 
+  <p style=" font-weight: bold; text-align: center; margin-left:100px;margin-right: 100px;">
+    FORECASTS VALID FOR THE NEXT 24 HOURS VALID AT <span style="color: red;">8:00 PM</span> TONIGHT 
+    AS ISSUED BY PAPUA NEW GUINEA NATIONAL WEATHER SERVICE.
+  </p>
+  <p style="text-align: center; font-size: 12px;">
+    NB: FORECASTS AREA WITHIN 60 NAUTICAL MILES OR 111 KILOMETRES FROM THE COASTLINE.
+  </p>
+
+  <div style="margin-left: 70px; font-size: 15px; font-weight: bold; color: #105B89; text-decoration: underline;">
+    CURRENT SYNOPTIC SITUATION AT <span style="color: #D8292C;"> 04:00 PM </span><span id="dateSynops"></span> [ <span id="UTCdate"></span>0600 UTC ]
+  </div>
+<br>
+<div contenteditable="true" class="bullet-textbox" id="bulletTextbox"></div>
+
+  <br>
+
+<div class="warnings" style="display: flex; width: 85%; margin-left: 70px; margin-right: 70px;">
+  <div style="width: 12%; font-size: 15px; font-weight: bold; color: #740406;">WARNINGS :</div>
+  <div id="warningsList" style="width:88%; font-size: 14px; font-style: italic; margin-left: 2px;" contenteditable="true">
+    No Current Warning
+  </div>
+</div> 
+
+<br>
+	<br>
+
+	<br>
+	 
+<br>
+    <table class="minor-weather-table">
+      <colgroup>
+        <col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+      </colgroup>
+      <tbody>
+        <tr class="minor-bold-text">
+          <td colspan="14" style="border-bottom:none; background-color: #e9f7e9;">WATERS OF MANUS AND ITS WESTERN GROUP OF ISLANDS:</td>
+			
+        </tr>
+        <tr>
+          <td colspan="14" style="border-top:none;">
+			  <div class="minor-note-line" contenteditable="true">WINDS: </div>
+			  <div class="minor-note-line" contenteditable="true">SEAS: </div>
+			  <div class="minor-note-line" contenteditable="true">WEATHER: </div>
+			  <div class="minor-note-line" contenteditable="false"></div>
+			  <br>
+		<div style="border-bottom:none; background-color: #e9f7e9; font-weight: bold;">WATERS OF NEW IRELAND TO EAST NEW BRITAIN:</div>
+			  <div class="minor-note-line" contenteditable="true">WINDS: </div>
+			  <div class="minor-note-line" contenteditable="true">SEAS: </div>
+			  <div class="minor-note-line" contenteditable="true">WEATHER: </div>
+			  <div class="minor-note-line" contenteditable="false"></div>
+					  <br>
+		<div style="border-bottom:none; background-color: #e9f7e9; font-weight: bold;">WATERS OF WEST NEW BRITAIN:</div>
+			  <div class="minor-note-line" contenteditable="true">WINDS: </div>
+			  <div class="minor-note-line" contenteditable="true">SEAS: </div>
+			  <div class="minor-note-line" contenteditable="true">WEATHER: </div>
+			  <div class="minor-note-line" contenteditable="false"></div>
+					  <br>
+		<div style="border-bottom:none; background-color: #e9f7e9; font-weight: bold;">WATERS OF BOUGANVILLE:</div>
+			  <div class="minor-note-line" contenteditable="true">WINDS: </div>
+			  <div class="minor-note-line" contenteditable="true">SEAS:.</div>
+			  <div class="minor-note-line" contenteditable="true">WEATHER:</div>
+			  <div class="minor-note-line" contenteditable="false"></div>
+		 </td>
+
+        </tr>
+
+        
+        <tr class="minor-bold-text">
+          <td colspan="7" style="border-bottom:none;">LORENGAU:</td>
+          <td colspan="7" style="border-bottom:none;">KAVIENG:</td>
+        </tr> 
+        <tr>
+          <td colspan="7" style="border-top:none;">    
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+          <td colspan="7" style="border-top:none;">
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+        </tr> 
+
+        <tr class="minor-bold-text">
+          <td colspan="7" style="border-bottom:none;">KOKOPO:</td>
+          <td colspan="7" style="border-bottom:none;">RABAUL:</td>
+        </tr>
+        <tr>
+          <td colspan="7" style="border-top:none;">
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+          <td colspan="7" style="border-top:none;">
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+        </tr> 
+
+        <tr class="minor-bold-text">
+          <td colspan="7" style="border-bottom:none;">KIMBE:</td>
+          <td colspan="7" style="border-bottom:none;">BUKA:</td>
+        </tr>
+        <tr>
+          <td colspan="7" style="border-top:none;">  
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+          <td colspan="7" style="border-top:none;">
+            <div class="minor-note-line" contenteditable="true">Mostly Fine</div>
+            <div class="minor-note-line" contenteditable="true">Light Variable winds</div>
+            <div class="minor-note-line" contenteditable="false">Max <span class="minor-temp-value" contenteditable="true">30</span>°C , Min <span class="minor-temp-value" contenteditable="true">24</span>°C</div>
+            <div class="minor-note-line" contenteditable="false" data-placeholder=""></div>
+          </td>
+        </tr> 
+        
+        <tr class="minor-bold-text">
+          <td colspan="14" style="border-bottom:none;">FORECAST FOR NEW GUINEA ISLANDS:</td>
+        </tr>
+        <tr>
+          <td colspan="14" style="border-top:none;">
+            <div class="minor-note-line" contenteditable="true">Scattered showers and Isolated Thunderstorms</div>
+          </td>
+        </tr>
+		        <tr class="minor-bold-text">
+          <td colspan="14" style="font-size: 12px;"><em>NB: Squally or gusty winds are expected to accompany areas with severe thunderstorms.</em></td>
+        </tr>
+      </tbody>
+    </table>
+
+  <br><br>
+
+    <div class="bottom-end" style="display: flex; width: 100%; margin-left: 70px;">
+      <div style="width: 13%;">DATE AND TIME:</div>
+      <div style="width: 9%;"><span id="setdate">DD/MM/YY</span></div>
+      <div style="width: 9%;"><span id="settime">HH:MM AM</span></div>
+      <div style="width: 12%;"><span id="autoUTC">DDHHMM UTC</span></div>
+      <div style="width: 18;">DUTY FORECASTER:</div>
+      <div style="width:33%; margin-left: 10px;" contenteditable="true"> JOE BLOW</div>
+    </div>
+    <span style="margin-left: 70px;">NNNN</span>
+  </div>
+</div>
+
+<!-- Time Picker -->
+<div id="timePicker" class="time-picker">
+  <select id="hourPicker">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+    <option value="11">11</option>
+    <option value="12">12</option>
+  </select>
+  :
+  <select id="minutePicker">
+    <option value="00">00</option>
+    <option value="05">05</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+    <option value="25">25</option>
+    <option value="30">30</option>
+    <option value="35">35</option>
+    <option value="40">40</option>
+    <option value="45">45</option>
+    <option value="50">50</option>
+    <option value="55">55</option>
+  </select>
+  <select id="ampmPicker">
+    <option value="AM">AM</option>
+    <option value="PM">PM</option>
+  </select>
+  <button id="timePickerOk">OK</button>
+</div>
+	
+<!-- Buttons outside container -->
+<div style="text-align:center; margin-top:20px;">
+  <button id="savePdfBtn" style="background-color:#d93025; color:white; padding:8px 20px; border:none; border-radius:6px; cursor:pointer;">Save PDF</button>
+  <button id="saveBtn" style="background-color:#34a853; color:white; padding:8px 20px; border:none; border-radius:6px; cursor:pointer;">Save</button>
+  <button id="resetBtn" style="background-color:#1a73e8; color:white; padding:8px 20px; border:none; border-radius:6px; cursor:pointer;">Reset</button>
+</div>
+
+<!-- Save Status -->
+<div id="saveStatus" class="save-status"></div>
+<!-- Include html2pdf library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="pdfExportngiafternoon.js"></script>
+<script>
+  // ===================== Date and Time Functions =====================
+  function formatOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function updateCurrentDate() {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const day = days[now.getDay()];
+    const date = formatOrdinal(now.getDate());
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    
+    document.getElementById('current-Date').textContent = `${day} ${date} ${month} ${year}`;
+  }
+  updateCurrentDate();
+
+  function updateSetDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    
+    document.getElementById('setdate').textContent = `${day}/${month}/${year}`;
+  }
+  updateSetDate();
+
+  function updateUTCDate() {
+    const now = new Date();
+    const day = String(now.getUTCDate()).padStart(2, '0');
+    const hours = String(now.getUTCHours()).padStart(2, '0');
+    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+
+    document.getElementById('autoUTC').textContent = `${day}${hours}${minutes} UTC`;
+  }
+  updateUTCDate();
+
+  function updateUTCdateShort() {
+    const now = new Date();
+    const day = String(now.getUTCDate()).padStart(2, '0');
+    document.getElementById('UTCdate').textContent = day;
+  }
+  updateUTCdateShort();
+
+  function updateSynopticDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    
+    document.getElementById('dateSynops').textContent = `${day}/${month}/${year}`;
+  }
+  updateSynopticDate();
+
+  // ===================== Time Picker =====================
+  function initTimePicker() {
+    const timePicker = document.getElementById('timePicker');
+    const timeSpan = document.getElementById('settime');
+    const hourPicker = document.getElementById('hourPicker');
+    const minutePicker = document.getElementById('minutePicker');
+    const ampmPicker = document.getElementById('ampmPicker');
+    const timePickerOk = document.getElementById('timePickerOk');
+
+    const now = new Date();
+    let hours = now.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+
+    timeSpan.textContent = `${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ${ampm}`;
+
+    timeSpan.style.cursor = 'pointer';
+    timeSpan.addEventListener('click', function() {
+      const rect = this.getBoundingClientRect();
+      timePicker.style.left = (rect.left + window.scrollX) + 'px';
+      timePicker.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+      timePicker.style.display = 'block';
+
+      hourPicker.value = hours;
+      minutePicker.value = String(now.getMinutes()).padStart(2, '0');
+      ampmPicker.value = ampm;
+    });
+
+    timePickerOk.addEventListener('click', function() {
+      const hour = hourPicker.value;
+      const minute = minutePicker.value;
+      const ampm = ampmPicker.value;
+
+      timeSpan.textContent = `${hour.padStart(2, '0')}:${minute} ${ampm}`;
+      timePicker.style.display = 'none';
+
+      updateUTCFromSelectedTime(hour, minute, ampm);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!timePicker.contains(e.target) && e.target !== timeSpan) {
+        timePicker.style.display = 'none';
+      }
+    });
+  }
+  initTimePicker();
+
+  function updateUTCFromSelectedTime(hour, minute, ampm) {
+    let hours24 = parseInt(hour);
+    if (ampm === 'PM' && hours24 !== 12) hours24 += 12;
+    if (ampm === 'AM' && hours24 === 12) hours24 = 0;
+
+    const now = new Date();
+
+    const pngUTC = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      hours24 - 10,
+      parseInt(minute)
+    );
+
+    const utcDate = new Date(pngUTC);
+
+    const utcDay = String(utcDate.getUTCDate()).padStart(2, '0');
+    const utcHours = String(utcDate.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+
+    document.getElementById('autoUTC').textContent = `${utcDay}${utcHours}${utcMinutes} UTC`;
+  }
+
+  // ===================== Dropdown Code =====================
+  const dropdown = document.createElement('div');
+  dropdown.classList.add('dropdown');
+  document.body.appendChild(dropdown);
+
+  const sharedData = {
+    span1: [
+      { name: 'EASTERLY', sub: ['TO SOUTHEAST','TO SOUTHERLY', 'TO NORTHEAST','TO NORTHWEST','TO SOUTHWEST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST', ] },
+      { name: 'WESTERLY', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'NORTHERLY', sub: ['TO EASTERLY', 'TO WESTERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+	  { name: 'SOUTHERLY', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO WESTERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+		{ name: 'SOUTHEAST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO WESTERLY', 'TO VARIABLE', 'TO CLOCKWISE'] },
+		{ name: 'SOUTHWEST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO WESTERLY', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+		{ name: 'NORTHEAST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO WESTERLY', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+		{ name: 'NORTHWEST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO WESTERLY', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+		{ name: 'VARIABLE', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO WESTERLY', 'TO CLOCKWISE'] },
+		{ name: 'CLOCKWISE', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO WESTERLY'] },
+    ],
+    span2: ['ISOLATED SHOWERS','ISOLATED SHOWERS AND THUNDERSTORMS','SCATTERED SHOWERS AND ISOLATED THUNDERSTORMS','SCATTERED SHOWERS AND THUNDERSTORMS','SCATTERED SHOWERS AND WIDESPREAD THUNDERSTORMS'],
+    span3Defaults: {
+      '0/5': '0 TO 1.0',
+      '5/10': '1.0 TO 1.3',
+	  '5/15': '1.0 TO 1.5',
+      '10/15': '1.0 TO 1.5',
+      '10/20': '1.0 TO 2.0',
+		'15/20': '1.5 TO 2.0',
+		'15/25': '1.5 TO 2.5',
+		'20/30': '2.0 TO 3.0',
+		'25/35': '2.5 TO 3.0',
+		'30/45': '3.0 TO 4.0'
+    },
+    span4: ['0/5', '5/10', '5/15', '10/15', '10/20', '15/20', '15/25', '20/30', '25/35', '35/45']
+  };
+
+  function attachDropdown(span, options, config={}) {
+    span.textContent = config.defaultValue || (Array.isArray(options) ? options[0] : options?.[0]?.name) || '';
+    span.addEventListener('click', e => {
+      if (!options || options.length === 0) return;
+      const rect = span.getBoundingClientRect();
+      dropdown.style.display = 'block';
+      dropdown.innerHTML = '';
+
+      const dropdownHeight = options.length * 30;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let top;
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+          top = rect.top + window.scrollY - dropdownHeight - 5;
+      } else {
+          top = rect.bottom + window.scrollY + 5;
+      }
+
+      const left = rect.left + window.scrollX;
+
+      dropdown.style.top = top + 'px';
+      dropdown.style.left = left + 'px';
+
+      options.forEach(opt => {
+        const optDiv = document.createElement('div');
+        optDiv.classList.add('option');
+        if (typeof opt === 'string') {
+          optDiv.textContent = opt;
+          optDiv.tabIndex = 0;
+          optDiv.addEventListener('click', ev => {
+            span.textContent = opt;
+            dropdown.style.display = 'none';
+            ev.stopPropagation();
+            if (config.link) {
+              const linkedSpan = config.link.target(span);
+              if (linkedSpan && config.link.map[opt]) linkedSpan.textContent = config.link.map[opt];
+            }
+          });
+        } else if (typeof opt === 'object') {
+          optDiv.textContent = opt.name;
+          if (opt.sub?.length > 0) {
+            const arrow = document.createElement('span');
+            arrow.classList.add('arrow');
+            arrow.textContent = '▶';
+            optDiv.appendChild(arrow);
+            const submenu = document.createElement('div');
+            submenu.classList.add('submenu');
+            opt.sub.forEach(sub => {
+              const subDiv = document.createElement('div');
+              subDiv.classList.add('suboption');
+              subDiv.textContent = sub;
+              subDiv.addEventListener('click', ev => {
+                span.textContent = opt.name + ' ' + sub;
+                dropdown.style.display = 'none';
+                ev.stopPropagation();
+              });
+              submenu.appendChild(subDiv);
+            });
+            optDiv.appendChild(submenu);
+          }
+          optDiv.addEventListener('click', ev => {
+            span.textContent = opt.name;
+            dropdown.style.display = 'none';
+            ev.stopPropagation();
+          });
+        }
+        dropdown.appendChild(optDiv);
+      });
+
+      const optionsEls = dropdown.querySelectorAll('.option');
+      let selectedIndex = -1;
+      function highlight(index) {
+        optionsEls.forEach(el => el.style.backgroundColor = '');
+        if (index >= 0 && index < optionsEls.length) {
+          optionsEls[index].style.backgroundColor = '#e0e0e0';
+          optionsEls[index].focus();
+        }
+      }
+
+      dropdown.onkeydown = function(ev) {
+        if (ev.key === 'ArrowDown') {
+          selectedIndex = (selectedIndex + 1) % optionsEls.length;
+          highlight(selectedIndex);
+          ev.preventDefault();
+        } else if (ev.key === 'ArrowUp') {
+          selectedIndex = (selectedIndex - 1 + optionsEls.length) % optionsEls.length;
+          highlight(selectedIndex);
+          ev.preventDefault();
+        } else if (ev.key === 'Enter' && selectedIndex >= 0) {
+          optionsEls[selectedIndex].click();
+        } else if (ev.key === 'Escape') {
+          dropdown.style.display = 'none';
+        }
+      };
+
+      highlight(0);
+      dropdown.focus();
+    });
+  }
+
+  function attachDropdownsForArea(areaId) {
+    const area = document.getElementById(areaId);
+    if (!area) return;
+    const span1 = area.querySelector('[data-role="span1"]');
+    const span2 = area.querySelector('[data-role="span2"]');
+    const span3 = area.querySelector('[data-role="span3"]');
+    const span4 = area.querySelector('[data-role="span4"]');
+    if(span1) attachDropdown(span1, sharedData.span1, { defaultValue: 'EASTERLY' });
+    if(span2) attachDropdown(span2, sharedData.span2, { defaultValue: 'SCATTERED SHOWERS' });
+    if (span3) span3.textContent = '0 TO 1.0';
+    if(span4) attachDropdown(span4, sharedData.span4, {
+      defaultValue: '0/5',
+      link: { target: () => span3, map: sharedData.span3Defaults }
+    });
+  }
+
+  ['area1','area2','area3','area4','area5','area6','area7','area8','area9','area10'].forEach(attachDropdownsForArea);
+
+  document.addEventListener('click', e => {
+    if (!dropdown.contains(e.target) && !e.target.classList.contains('clickable')) {
+      dropdown.style.display = 'none';
+    }
+  });
+	
+  // ===================== Div2 width limit =====================
+  document.querySelectorAll('.div2').forEach(div2 => {
+    function willExceedWidth(text) {
+      const temp = document.createElement('span');
+      temp.style.visibility = 'hidden';
+      temp.style.whiteSpace = 'nowrap';
+      temp.style.font = window.getComputedStyle(div2).font;
+      temp.textContent = text;
+      document.body.appendChild(temp);
+      const exceeds = temp.offsetWidth > div2.clientWidth;
+      document.body.removeChild(temp);
+      return exceeds;
+    }
+
+    div2.addEventListener('keypress', e => {
+      if (e.ctrlKey || e.metaKey || e.key.length > 1) return;
+      const newText = div2.textContent + e.key;
+      if (willExceedWidth(newText)) e.preventDefault();
+    });
+
+    div2.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+      let newText = div2.textContent;
+      for (let char of pasteText) {
+        if (willExceedWidth(newText + char)) break;
+        newText += char;
+      }
+      div2.textContent = newText;
+
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(div2);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+  });
+
+  // ===================== Synoptic editor code =====================
+  const textbox = document.getElementById('bulletTextbox');
+
+  function resetTextbox() {
+    textbox.innerHTML = '<ul><li><br></li></ul>';
+    placeCaretAtEnd(textbox.querySelector('li'));
+  }
+
+  function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    el.focus();
+  }
+
+  // Reset on page load
+  window.addEventListener('load', resetTextbox);
+
+  // Insert new bullet on Enter
+  textbox.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.execCommand('insertHTML', false, '<li><br></li>');
+      e.preventDefault();
+    }
+  });
+
+  // Paste text: split into new bullets at each line, ignore formatting
+  textbox.addEventListener('paste', function(e) {
+    e.preventDefault();
+    let text = (e.clipboardData || window.clipboardData).getData('text');
+
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+
+    const formatted = lines.map(line => `<li>${line}</li>`).join('');
+    document.execCommand('insertHTML', false, formatted);
+  });
+</script>
+</body>
+</html>

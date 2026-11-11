@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNGNWS Storm Surge Warning Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="logoImage.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            text-align: center;
+            background-color: #198898;
+            color: #F7C310;
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: #198898;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h3, h4 {
+            margin: 5px 0;
+            color: #F7C310;
+        }
+
+        .form-section {
+            background-color: #ECE8E0;
+            color: #000;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #005b89;
+        }
+
+        .form-section h5 {
+            margin: 0 0 10px 0;
+            color: #005b89;
+            font-size: 15px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #005b89;
+            padding-bottom: 4px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 13px;
+            min-width: 145px;
+        }
+
+        input[type="text"], input[type="date"], input[type="time"], select, textarea {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            box-sizing: border-box;
+            background: #fff;
+        }
+
+        .input-flex {
+            flex-grow: 1;
+            min-width: 180px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            resize: vertical;
+        }
+
+        .bullet-item {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .bullet-item button {
+            padding: 6px 10px;
+            font-size: 12px;
+            background: #d93025;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+            touch-action: manipulation;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-generate { background-color: #d93025; color: white; }
+        .btn-save { background-color: #34a853; color: white; }
+        .btn-reset { background-color: #1a73e8; color: white; }
+
+        .save-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #F7C310;
+            height: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .container {
+                padding: 10px;
+            }
+
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            label {
+                min-width: unset;
+                margin-bottom: 2px;
+            }
+            .input-flex {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="info-box">
+        <h3>PORT MORESBY PUBLIC AND SEVERE WEATHER WARNING CENTER</h3>
+        <h4>STORM SURGE WARNING DASHBOARD</h4>
+    </div>
+
+    <!-- Header Config -->
+    <div class="form-section">
+        <h5>Warning Type & Validity Configuration</h5>
+        <div class="form-group">
+            <label for="warningType">Warning Option:</label>
+            <select id="warningType" class="input-flex">
+                <option value="Initial">Initial</option>
+                <option value="Renewal">Renewal</option>
+                <option value="Final">Final</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="issuanceDate">Issue Date:</label>
+            <input type="date" id="issuanceDate" class="input-flex">
+            <label for="validTime">Valid Time:</label>
+            <input type="time" id="validTime" value="23:00" class="input-flex">
+        </div>
+    </div>
+
+    <!-- Synoptic Situation -->
+    <div class="form-section">
+        <h5>Synoptic Situation</h5>
+        <div class="form-group">
+            <label for="synopTime">Synoptic Time:</label>
+            <input type="time" id="synopTime" value="22:00" class="input-flex" onchange="updateUTC()">
+            <label for="synopDate">Synoptic Date:</label>
+            <input type="date" id="synopDate" class="input-flex" onchange="updateUTC()">
+            <label for="utcTime">UTC Code:</label>
+            <input type="text" id="utcTime" placeholder="e.g. 081200Z" readonly style="width: 110px;">
+        </div>
+        <div class="form-group">
+            <label for="synopText">Description:</label>
+            <textarea id="synopText" class="input-flex">Severe Tropical Cyclone Maila (Category 5) located approximately 255m, North-East of Rossel Island, and 350km Northeast of Misima, and 310km East Southeast of Woodlark, Milne Bay.</textarea>
+        </div>
+    </div>
+
+    <!-- Warning Areas -->
+    <div class="form-section">
+        <h5>Warning Areas</h5>
+        <div id="bulletContainer">
+            <div class="bullet-item">
+                <input type="text" class="input-flex bullet-input" value="FOR COASTAL AREAS OF MILNE BAY AND BOUGAINVLE, NGI AND MOMASE REGION.">
+                <button type="button" onclick="removeBulletField(this)">Remove</button>
+            </div>
+        </div>
+        <button type="button" onclick="addBulletField()" style="padding: 6px 14px; font-size: 13px; margin-top: 5px; background: #005b89; color: #fff; border-radius: 4px; border: none; cursor: pointer;">+ Add Warning Area</button>
+    </div>
+
+    <!-- Note & Caution -->
+    <div class="form-section">
+        <h5>Warning Note & Caution</h5>
+        <div class="form-group">
+            <label for="warningNote">Warning Note:</label>
+            <textarea id="warningNote" class="input-flex">STORM SURGES OF 3.0 METERS TO 4.5 METERS ARE EXPECTED ALONG THE COASTLINE WARNING AREAS WHICH HAS THE POTENTIAL TO CAUSE SEVERE COASTAL FLOODING IN LOW-LYING AREAS. THE STORM SURGE IS EXPECTED TO PERSIST IN THE NEXT 12/24 HOURS.</textarea>
+        </div>
+        <div class="form-group">
+            <label for="cautionText">Caution Note:</label>
+            <textarea id="cautionText" class="input-flex">ALL COMMUNITIES LIVING ALONG THE MENTIONED WARNING AREAS ARE ADVISED TO TAKE NECESSARY PRECAUTIONS DURING THE WARNING PERIOD.</textarea>
+        </div>
+        <div class="form-group">
+            <label for="nextReview">Next Review Time:</label>
+            <input type="time" id="nextReview" value="05:00" class="input-flex">
+        </div>
+    </div>
+
+    <!-- Authorization Footer -->
+    <div class="form-section">
+        <h5>Authorization & Sign-Off</h5>
+        <div class="form-group">
+            <label for="authorizers">Authorised By:</label>
+            <input type="text" id="authorizers" class="input-flex" value="W. Horis/F. Kede">
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-container">
+        <button class="btn-generate" onclick="generatePDF()">Generate PDF</button>
+        <button class="btn-save" onclick="saveData()">Save</button>
+        <button class="btn-reset" onclick="resetData()">Reset</button>
+    </div>
+
+    <!-- Save Status -->
+    <div id="saveStatus" class="save-status"></div>
+</div>
+
+<script>
+    // ===================== Date & UTC Auto-Population =====================
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        if(!document.getElementById('issuanceDate').value) document.getElementById('issuanceDate').value = today;
+        if(!document.getElementById('synopDate').value) document.getElementById('synopDate').value = today;
+        updateUTC();
+    }
+    window.addEventListener('load', setDefaultDates);
+
+    function updateUTC() {
+        const sDate = document.getElementById('synopDate').value;
+        const sTime = document.getElementById('synopTime').value;
+        if(!sDate || !sTime) return;
+
+        const [year, month, day] = sDate.split('-').map(Number);
+        const [hours, minutes] = sTime.split(':').map(Number);
+
+        // Convert PNG local time (UTC+10) to UTC
+        const pngUTC = Date.UTC(year, month - 1, day, hours - 10, minutes);
+        const utcDate = new Date(pngUTC);
+
+        const utcDay = String(utcDate.getUTCDate()).padStart(2, '0');
+        const utcHours = String(utcDate.getUTCHours()).padStart(2, '0');
+        const utcMinutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+
+        document.getElementById('utcTime').value = `${utcDay}${utcHours}${utcMinutes}Z`;
+    }
+
+    // ===================== Dynamic Bullet Fields =====================
+    function addBulletField() {
+        const container = document.getElementById('bulletContainer');
+        const div = document.createElement('div');
+        div.className = 'bullet-item';
+        div.innerHTML = `
+            <input type="text" class="input-flex bullet-input" placeholder="Enter warning area...">
+            <button type="button" onclick="removeBulletField(this)">Remove</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeBulletField(button) {
+        const item = button.parentElement;
+        if(document.querySelectorAll('.bullet-item').length > 1) {
+            item.remove();
+        } else {
+            item.querySelector('input').value = '';
+        }
+    }
+
+    // ===================== Action Handlers =====================
+    function saveData() {
+        const status = document.getElementById('saveStatus');
+        status.textContent = "Data saved successfully!";
+        setTimeout(() => { status.textContent = ""; }, 3000);
+    }
+
+    function resetData() {
+        if(confirm("Are you sure you want to reset all fields?")) {
+            document.querySelectorAll('input[type="text"], textarea').forEach(el => {
+                if(el.id !== 'authorizers') el.value = '';
+            });
+            setDefaultDates();
+            document.getElementById('saveStatus').textContent = "Form reset.";
+            setTimeout(() => { document.getElementById('saveStatus').textContent = ""; }, 3000);
+        }
+    }
+</script>
+<script src="storm_surge_warning.js"></script>
+</body>
+</html>

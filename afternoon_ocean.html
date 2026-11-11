@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Waters</title>
+  <script src="logoImage.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 1024px;   /* keeps content centered */
+      margin: 10px auto;   /* centers the container horizontally */
+      padding: 15px;       /* inner spacing */
+      background: #fff;    /* page background */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+    }
+
+    body {
+      background: #f4f4f8; /* light gray page background */
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      padding: 10px;
+      margin: 0;
+    }  
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0px;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;         /* fill the container */
+      border-collapse: collapse;
+      table-layout: auto;
+      min-width: 500px;
+    }
+
+    td {
+      padding: 2px 0;
+      margin: 0;
+      border: 0px solid black; /* optional for clarity */
+      text-align: left;
+    }
+
+    td:first-child {
+      white-space: nowrap;     /* shrink/expand to fit content */
+    }
+
+    td:last-child {
+      width: 100%;             /* take up remaining width */
+    }
+
+    /* ==================================================================================== */
+    .warnings {
+      font-size: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* =======================================textbox============================================= */
+    .bullet-textbox {
+      width: 90%;
+      min-height: 1.2em;       
+      border: none;              
+      padding: 0;
+      font-size: 14px;          
+      font-style: italic;       
+      font-family: "Times New Roman", Times, serif; 
+      outline: none;
+      line-height: 1.2em;
+      white-space: pre-wrap;    
+      word-wrap: break-word;    
+      overflow-x: hidden;   
+      margin-left: 15px;
+    }
+
+    .bullet-textbox ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .bullet-textbox li {
+      list-style-type: disc;
+    }
+    /* ==================================================================================== */
+    .clickable {
+      cursor: pointer;
+      margin: 0px;
+      display: inline-block;
+      color: black;
+      text-decoration: none; /* plain text */
+    }
+
+    .dropdown {
+      position: absolute;
+      display: none;
+      background-color: greenyellow;
+      border: 1px solid #ccc;
+      min-width: 150px;
+      z-index: 1000;
+      border-radius: 4px;
+      font-size: 14px; 
+    }
+
+    .dropdown .option {
+      padding: 8px 12px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .dropdown .option:hover {
+      background-color: #108BB7;
+    }
+
+    .arrow {
+      float: right;
+    }
+
+    .submenu {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background-color: greenyellow;
+      border: 1px solid #ccc;
+      min-width: 180px;
+      border-radius: 4px;
+    }
+
+    .option:hover > .submenu {
+      display: block;
+    }
+
+    .submenu .suboption {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .submenu .suboption:hover {
+      background-color: #108BB7;
+    }
+
+    /* ==================================================================================== */
+    .cell-content {
+      display: flex;           /* lay out children in a row */
+      gap: 5px;                /* optional spacing between editables */
+      width: 100%;
+    }
+
+    .editable {
+      outline: none;
+      padding: 2px;
+    }
+
+    .first {
+      flex: 0 1 auto;          /* grow/shrink based on its content */
+      min-width: 20px;
+    }
+
+    .remaining {
+      flex: 1;                 /* takes all remaining space */
+      min-width: 20px;
+    }
+
+    /* ==================================================================================== */
+    /* Flex row */
+    .row {
+      display: flex;
+      width: 100%;
+      border: 0px solid gray;
+    }
+
+    /* Div 1: adjusts to content width */
+    .div1 {
+      white-space: nowrap;  /* prevents breaking into multiple lines */
+      padding: 0px;
+    }
+
+    /* Div 2: takes remaining space, editable */
+    .div2 {
+      flex: 1;                     /* fills remaining width */
+      padding: 0px 4px;
+      border-left: 0px solid gray;
+      white-space: nowrap;
+      overflow: hidden;
+      cursor: text;
+      transition: background-color 0.2s ease;
+    }
+
+    .div2[contenteditable="true"]:hover,
+    .div2[contenteditable="true"]:focus {
+      background-color: #f0f0f0; /* Light grey highlight */
+      outline: none; /* remove default outline */
+    }
+
+    /* SYNOPTIC SITUATION---------------------------- */
+    .editor {
+      width: 100%;
+      min-height: 20px;
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #fff;
+      outline: none;
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      font-style: italic;
+      transition: background-color 0.2s ease;
+    }
+
+    .editor .line {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      padding: 0;
+    }
+
+    .editor .line:focus {
+      background-color: #f0f0f0; /* Light grey highlight */
+    }
+
+    .editor .item {
+      display: flex;
+      align-items: flex-start;
+      margin: 0;
+      padding: 0;
+      line-height: 1.05;
+      gap: 6px;
+    }
+
+    .editor .marker {
+      user-select: none;
+      flex: 0 0 14px;
+      display: inline-block;
+      transform: translateY(1px);
+    }
+
+    /* Time picker styles */
+    .time-picker {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1001;
+      display: none;
+    }
+
+    .time-picker select {
+      margin: 0 5px;
+      padding: 5px;
+    }
+
+    .time-picker button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .action-buttons {
+      text-align: center;
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      touch-action: manipulation;
+    }
+
+    .save-status {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: green;
+      height: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      .bottom-end {
+        flex-direction: column;
+        gap: 5px;
+        align-items: stretch !important;
+      }
+      .bottom-end > div {
+        width: 100% !important;
+        margin-left: 0 !important;
+      }
+      .warnings {
+        flex-direction: column;
+      }
+      .warnings > div {
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="top-header"><h4>ZCZC GOPNG</h4> <h4 id="currentDayDate"><span id="current-Date"></span></h4></div>
+  <h3 style="text-align: center;margin-top: 0px; margin-bottom: 0px;">PNG OCEAN WATERS FORECASTS</h3>
+  <h3 style="text-align: center; margin-top: 1px;">TONIGHT TO TOMORROW</h3> 
+  <p style="text-align: center; margin-left:10px; margin-right: 10px;">
+    FORECAST FOR THE OCEAN WATERS OF PAPUA NEW GUINEA FOR THE NEXT 24 HOURS VALID AT 8:00 PM    
+    AS ISSUED BY PAPUA NEW GUINEA NATIONAL WEATHER SERVICE.
+  </p>
+  <p style="text-align: center; font-size: 12px;">
+    NB: FORECASTS ARE OUTSIDE THE 60 NAUTICAL MILES OR 111 KILOMETRES FROM THE COASTLINE.
+  </p>
+
+  <div style="margin-left: 15px; font-size: 15px; font-weight: bold; color: #105B89; text-decoration: underline;">
+    SYNOPTIC SITUATION AT <span style="color: #D8292C;">04:00 PM </span><span id="dateSynops"></span> [ <span id="UTCdate"></span>0600 UTC ]
+  </div>
+  <br>
+  <div contenteditable="true" class="bullet-textbox" id="bulletTextbox"></div>
+
+  <br>
+
+  <div class="warnings" style="display: flex; width: 100%;">
+    <div style="width: 15%; margin-left: 0px; font-size: 15px; font-weight: bold; color: #740406;">WARNINGS :</div>
+    <div id="warningsList" style="width: 85%; font-size: 14px; font-style: italic; margin-left: 0px;" contenteditable="true">
+      No Current Warning
+    </div>
+  </div> 
+
+  <p style="margin-bottom: 10px;font-weight: bold; text-decoration: underline;color: #07387D;">
+    FORECAST FOR THE OCEAN WATERS OF PAPUA NEW GUINEA FOR THE NEXT 24 HOURS VALID AT <span style="color: #D8292C;">08:00 PM:</span>
+  </p>
+
+  <div id="sea-area1">
+    <span style="font-weight: bold;">CORAL SEA :</span>
+    <div class="table-responsive">
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WINDS:</b> <span class="clickable" data-role="span1"></span> AT <span class="clickable" data-role="span4"></span> KNOTS</td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>SEAS:</b> <span class="clickable" data-role="span3"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WEATHER:</b> <span class="clickable" data-role="span2"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <br>
+
+  <div id="sea-area2">
+    <span style="font-weight: bold;">SOLOMON SEA: </span>
+    <div class="table-responsive">
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WINDS:</b> <span class="clickable" data-role="span1"></span> AT <span class="clickable" data-role="span4"></span> KNOTS</td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>SEAS:</b> <span class="clickable" data-role="span3"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WEATHER:</b> <span class="clickable" data-role="span2"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <br>
+
+  <div id="sea-area3">
+    <span style="font-weight: bold;">BISMARK SEA :</span>
+    <div class="table-responsive">
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WINDS:</b> <span class="clickable" data-role="span1"></span> AT <span class="clickable" data-role="span4"></span> KNOTS</td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>SEAS:</b> <span class="clickable" data-role="span3"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WEATHER:</b> <span class="clickable" data-role="span2"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <br>
+
+  <div id="sea-area4">
+    <span style="font-weight: bold;">PACIFIC OCEAN :</span>
+    <div class="table-responsive">
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WINDS:</b> <span class="clickable" data-role="span1"></span> AT <span class="clickable" data-role="span4"></span> KNOTS</td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>SEAS:</b> <span class="clickable" data-role="span3"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+      <table>
+        <tr class="row">
+          <td class="div1"><b>WEATHER:</b> <span class="clickable" data-role="span2"></span></td>
+          <td class="div2" contenteditable="true"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <br>
+
+  <p style="margin: 10px;"><em>NB: Squally or gusty winds are expected to accompany areas with severe thunderstorms.</em></p>
+
+  <div class="bottom-end" style="display: flex; width: 100%; gap: 5px; align-items: center; flex-wrap: wrap;">
+    <div>DATE AND TIME:</div>
+    <div><span id="setdate">DD/MM/YY</span></div>
+    <div><span id="settime">HH:MM AM</span></div>
+    <div><span id="autoUTC">DDHHMM UTC</span></div>
+    <div>DUTY FORECASTER:</div>
+    <div style="flex-grow: 1; min-width: 120px;" contenteditable="true"> JOE BLOW</div>
+  </div>
+  NNNN
+</div>
+
+<!-- Time Picker -->
+<div id="timePicker" class="time-picker">
+  <select id="hourPicker">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+    <option value="11">11</option>
+    <option value="12">12</option>
+  </select>
+  :
+  <select id="minutePicker">
+    <option value="00">00</option>
+    <option value="05">05</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+    <option value="25">25</option>
+    <option value="30">30</option>
+    <option value="35">35</option>
+    <option value="40">40</option>
+    <option value="45">45</option>
+    <option value="50">50</option>
+    <option value="55">55</option>
+  </select>
+  <select id="ampmPicker">
+    <option value="AM">AM</option>
+    <option value="PM">PM</option>
+  </select>
+  <button id="timePickerOk">OK</button>
+</div>
+	
+<!-- Buttons outside container -->
+<div class="action-buttons">
+  <button id="savePdfBtn" style="background-color:#d93025; color:white;">Save PDF</button>
+  <button id="saveBtn" style="background-color:#34a853; color:white;">Save</button>
+  <button id="resetBtn" style="background-color:#1a73e8; color:white;">Reset</button>
+</div>
+
+<!-- Save Status -->
+<div id="saveStatus" class="save-status"></div>
+
+<!-- Include html2pdf library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="pdfExportnoon.js"></script>
+<script>
+  // ===================== Date and Time Functions =====================
+  function formatOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function updateCurrentDate() {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const day = days[now.getDay()];
+    const date = formatOrdinal(now.getDate());
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    
+    document.getElementById('current-Date').textContent = `${day} ${date} ${month} ${year}`;
+  }
+
+  function updateSetDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    
+    document.getElementById('setdate').textContent = `${day}/${month}/${year}`;
+  }
+
+  function updateUTCDate() {
+    const now = new Date();
+    const day = String(now.getUTCDate()).padStart(2, '0');
+    const hours = String(now.getUTCHours()).padStart(2, '0');
+    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+
+    document.getElementById('autoUTC').textContent = `${day}${hours}${minutes} UTC`;
+  }
+
+  function updateUTCdateShort() {
+    const now = new Date();
+    const day = String(now.getUTCDate()).padStart(2, '0');
+    document.getElementById('UTCdate').textContent = day;
+  }
+
+  function updateSynopticDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    
+    document.getElementById('dateSynops').textContent = `${day}/${month}/${year}`;
+  }
+
+  // ===================== Time Picker =====================
+  function initTimePicker() {
+    const timePicker = document.getElementById('timePicker');
+    const timeSpan = document.getElementById('settime');
+    const hourPicker = document.getElementById('hourPicker');
+    const minutePicker = document.getElementById('minutePicker');
+    const ampmPicker = document.getElementById('ampmPicker');
+    const timePickerOk = document.getElementById('timePickerOk');
+
+    const now = new Date();
+    let hours = now.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+
+    timeSpan.textContent = `${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ${ampm}`;
+
+    timeSpan.style.cursor = 'pointer';
+    timeSpan.addEventListener('click', function() {
+      const rect = this.getBoundingClientRect();
+      timePicker.style.left = (rect.left + window.scrollX) + 'px';
+      timePicker.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+      timePicker.style.display = 'block';
+
+      hourPicker.value = hours;
+      minutePicker.value = String(now.getMinutes()).padStart(2, '0');
+      ampmPicker.value = ampm;
+    });
+
+    timePickerOk.addEventListener('click', function() {
+      const hour = hourPicker.value;
+      const minute = minutePicker.value;
+      const ampm = ampmPicker.value;
+
+      timeSpan.textContent = `${hour.padStart(2, '0')}:${minute} ${ampm}`;
+      timePicker.style.display = 'none';
+
+      updateUTCFromSelectedTime(hour, minute, ampm);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!timePicker.contains(e.target) && e.target !== timeSpan) {
+        timePicker.style.display = 'none';
+      }
+    });
+  }
+
+  function updateUTCFromSelectedTime(hour, minute, ampm) {
+    let hours24 = parseInt(hour);
+    if (ampm === 'PM' && hours24 !== 12) hours24 += 12;
+    if (ampm === 'AM' && hours24 === 12) hours24 = 0;
+
+    const now = new Date();
+
+    const pngUTC = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      hours24 - 10,
+      parseInt(minute)
+    );
+
+    const utcDate = new Date(pngUTC);
+
+    const utcDay = String(utcDate.getUTCDate()).padStart(2, '0');
+    const utcHours = String(utcDate.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+
+    document.getElementById('autoUTC').textContent = `${utcDay}${utcHours}${utcMinutes} UTC`;
+  }
+
+  // ===================== Dropdown Code =====================
+  const dropdown = document.createElement('div');
+  dropdown.classList.add('dropdown');
+  document.body.appendChild(dropdown);
+
+  const sharedData = {
+    span1: [
+      { name: 'EASTERLY', sub: ['TO SOUTHEAST','TO SOUTHERLY', 'TO NORTHEAST','TO NORTHWEST','TO SOUTHWEST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST','TO NORTHEAST', ] },
+      { name: 'WESTERLY', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'NORTHERLY', sub: ['TO EASTERLY', 'TO WESTERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'SOUTHERLY', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO WESTERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'SOUTHEAST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO WESTERLY', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'SOUTHWEST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO WESTERLY', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'NORTHEAST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO WESTERLY', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'NORTHWEST', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO WESTERLY', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO CLOCKWISE'] },
+      { name: 'VARIABLE', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO WESTERLY', 'TO CLOCKWISE'] },
+      { name: 'CLOCKWISE', sub: ['TO EASTERLY', 'TO NORTHERLY', 'TO SOUTHERLY', 'TO NORTHWEST', 'TO NORTHEAST', 'TO SOUTHWEST', 'TO SOUTHEAST', 'TO VARIABLE', 'TO WESTERLY'] },
+    ],
+    span2: ['ISOLATED SHOWERS','ISOLATED SHOWERS AND THUNDERSTORMS','SCATTERED SHOWERS AND ISOLATED THUNDERSTORMS','SCATTERED SHOWERS AND THUNDERSTORMS','SCATTERED SHOWERS AND WIDESPREAD THUNDERSTORMS'],
+    span3Defaults: {
+      '0/5': 'SMOOTH',
+      '5/10': 'SLIGHT',
+      '5/15': 'SLIGHT TO MODERATE',
+      '10/15': 'MODERATE',
+      '10/20': 'MODERATE',
+      '15/20': 'MODERATE',
+      '15/25': 'MODERATE TO ROUGH',
+      '20/30': 'ROUGH',
+      '25/35': 'VERY ROUGH',
+      '30/45': 'HIGH SEAS'
+    },
+    span4: ['0/5', '5/10', '5/15', '10/15', '10/20', '15/20', '15/25', '20/30', '25/35', '35/45']
+  };
+
+  function attachDropdown(span, options, config={}) {
+    span.textContent = config.defaultValue || (Array.isArray(options) ? options[0] : options?.[0]?.name) || '';
+    span.addEventListener('click', e => {
+      if (!options || options.length === 0) return;
+      const rect = span.getBoundingClientRect();
+      dropdown.style.display = 'block';
+      dropdown.innerHTML = '';
+
+      const dropdownHeight = options.length * 30;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let top;
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+          top = rect.top + window.scrollY - dropdownHeight - 5;
+      } else {
+          top = rect.bottom + window.scrollY + 5;
+      }
+
+      const left = rect.left + window.scrollX;
+
+      dropdown.style.top = top + 'px';
+      dropdown.style.left = left + 'px';
+
+      options.forEach(opt => {
+        const optDiv = document.createElement('div');
+        optDiv.classList.add('option');
+        if (typeof opt === 'string') {
+          optDiv.textContent = opt;
+          optDiv.tabIndex = 0;
+          optDiv.addEventListener('click', ev => {
+            span.textContent = opt;
+            dropdown.style.display = 'none';
+            ev.stopPropagation();
+            if (config.link) {
+              const linkedSpan = config.link.target(span);
+              if (linkedSpan && config.link.map[opt]) linkedSpan.textContent = config.link.map[opt];
+            }
+          });
+        } else if (typeof opt === 'object') {
+          optDiv.textContent = opt.name;
+          if (opt.sub?.length > 0) {
+            const arrow = document.createElement('span');
+            arrow.classList.add('arrow');
+            arrow.textContent = '▶';
+            optDiv.appendChild(arrow);
+            const submenu = document.createElement('div');
+            submenu.classList.add('submenu');
+            opt.sub.forEach(sub => {
+              const subDiv = document.createElement('div');
+              subDiv.classList.add('suboption');
+              subDiv.textContent = sub;
+              subDiv.addEventListener('click', ev => {
+                span.textContent = opt.name + ' ' + sub;
+                dropdown.style.display = 'none';
+                ev.stopPropagation();
+              });
+              submenu.appendChild(subDiv);
+            });
+            optDiv.appendChild(submenu);
+          }
+          optDiv.addEventListener('click', ev => {
+            span.textContent = opt.name;
+            dropdown.style.display = 'none';
+            ev.stopPropagation();
+          });
+        }
+        dropdown.appendChild(optDiv);
+      });
+
+      const optionsEls = dropdown.querySelectorAll('.option');
+      let selectedIndex = -1;
+      function highlight(index) {
+        optionsEls.forEach(el => el.style.backgroundColor = '');
+        if (index >= 0 && index < optionsEls.length) {
+          optionsEls[index].style.backgroundColor = '#e0e0e0';
+          optionsEls[index].focus();
+        }
+      }
+
+      dropdown.onkeydown = function(ev) {
+        if (ev.key === 'ArrowDown') {
+          selectedIndex = (selectedIndex + 1) % optionsEls.length;
+          highlight(selectedIndex);
+          ev.preventDefault();
+        } else if (ev.key === 'ArrowUp') {
+          selectedIndex = (selectedIndex - 1 + optionsEls.length) % optionsEls.length;
+          highlight(selectedIndex);
+          ev.preventDefault();
+        } else if (ev.key === 'Enter' && selectedIndex >= 0) {
+          optionsEls[selectedIndex].click();
+        } else if (ev.key === 'Escape') {
+          dropdown.style.display = 'none';
+        }
+      };
+
+      highlight(0);
+      dropdown.focus();
+    });
+  }
+
+  function attachDropdownsForArea(areaId) {
+    const area = document.getElementById(areaId);
+    if (!area) return;
+    const span1 = area.querySelector('[data-role="span1"]');
+    const span2 = area.querySelector('[data-role="span2"]');
+    const span3 = area.querySelector('[data-role="span3"]');
+    const span4 = area.querySelector('[data-role="span4"]');
+    attachDropdown(span1, sharedData.span1, { defaultValue: 'EASTERLY' });
+    attachDropdown(span2, sharedData.span2, { defaultValue: 'SCATTERED SHOWERS' });
+    if (span3) span3.textContent = 'MODERATE';
+    attachDropdown(span4, sharedData.span4, {
+      defaultValue: '10/15',
+      link: { target: () => span3, map: sharedData.span3Defaults }
+    });
+  }
+
+  ['sea-area1','sea-area2','sea-area3','sea-area4'].forEach(attachDropdownsForArea);
+
+  document.addEventListener('click', e => {
+    if (!dropdown.contains(e.target) && !e.target.classList.contains('clickable')) {
+      dropdown.style.display = 'none';
+    }
+  });
+	
+  // ===================== Div2 width limit =====================
+  document.querySelectorAll('.div2').forEach(div2 => {
+    function willExceedWidth(text) {
+      const temp = document.createElement('span');
+      temp.style.visibility = 'hidden';
+      temp.style.whiteSpace = 'nowrap';
+      temp.style.font = window.getComputedStyle(div2).font;
+      temp.textContent = text;
+      document.body.appendChild(temp);
+      const exceeds = temp.offsetWidth > div2.clientWidth;
+      document.body.removeChild(temp);
+      return exceeds;
+    }
+
+    div2.addEventListener('keypress', e => {
+      if (e.ctrlKey || e.metaKey || e.key.length > 1) return;
+      const newText = div2.textContent + e.key;
+      if (willExceedWidth(newText)) e.preventDefault();
+    });
+
+    div2.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+      let newText = div2.textContent;
+      for (let char of pasteText) {
+        if (willExceedWidth(newText + char)) break;
+        newText += char;
+      }
+      div2.textContent = newText;
+
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(div2);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+  });
+
+  // ===================== Synoptic editor code =====================
+  const textbox = document.getElementById('bulletTextbox');
+
+  function resetTextbox() {
+    textbox.innerHTML = '<ul><li><br></li></ul>';
+    placeCaretAtEnd(textbox.querySelector('li'));
+  }
+
+  function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    el.focus();
+  }
+
+  // Reset on page load
+  window.addEventListener('load', resetTextbox);
+
+  // Insert new bullet on Enter
+  textbox.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.execCommand('insertHTML', false, '<li><br></li>');
+      e.preventDefault();
+    }
+  });
+
+  // Paste text: split into new bullets at each line, ignore formatting
+  textbox.addEventListener('paste', function(e) {
+    e.preventDefault();
+    let text = (e.clipboardData || window.clipboardData).getData('text');
+
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    const formatted = lines.map(line => `<li>${line}</li>`).join('');
+
+    document.execCommand('insertHTML', false, formatted);
+  });
+
+  // Keep first bullet always
+  textbox.addEventListener('input', function() {
+    const ul = textbox.querySelector('ul');
+    if (!ul || ul.children.length === 0) {
+      resetTextbox();
+    }
+  });
+
+  // ===================== WARNING SECTION =====================
+  const warningsDiv = document.querySelector('.warnings div[contenteditable="true"]');
+
+  function resetWarnings() {
+    warningsDiv.textContent = 'No Current Warning';
+    placeCaretAtEnd(warningsDiv);
+  }
+
+  warningsDiv.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('load', resetWarnings);
+
+  // ===================== SAVE AND RESTORE =====================
+
+  function collectFormData() {
+    const data = {};
+
+    document.querySelectorAll('[contenteditable="true"]').forEach((el, i) => {
+      data[`editable_${i}`] = el.innerHTML.trim();
+    });
+
+    document.querySelectorAll('.clickable').forEach((span, i) => {
+      data[`span_${i}`] = span.textContent.trim();
+    });
+
+    data['bulletTextbox'] = document.getElementById('bulletTextbox').innerHTML;
+    data['warningsList'] = document.getElementById('warningsList').innerHTML;
+
+    return data;
+  }
+
+  function restoreFormData() {
+    const saved = JSON.parse(localStorage.getItem('oceanWatersData'));
+    if (!saved) return;
+
+    document.querySelectorAll('[contenteditable="true"]').forEach((el, i) => {
+      if (saved[`editable_${i}`] !== undefined) el.innerHTML = saved[`editable_${i}`];
+    });
+
+    document.querySelectorAll('.clickable').forEach((span, i) => {
+      if (saved[`span_${i}`] !== undefined) span.textContent = saved[`span_${i}`];
+    });
+
+    if (saved['bulletTextbox']) {
+      document.getElementById('bulletTextbox').innerHTML = saved['bulletTextbox'];
+    }
+
+    if (saved['warningsList']) {
+      document.getElementById('warningsList').innerHTML = saved['warningsList'];
+    }
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const data = collectFormData();
+    localStorage.setItem('oceanWatersData', JSON.stringify(data));
+    const status = document.getElementById('saveStatus');
+    status.textContent = '✅ Ocean Waters forecast saved. Data will persist even after reload.';
+    setTimeout(() => {
+      status.textContent = '';
+    }, 3000);
+  });
+
+  window.addEventListener('DOMContentLoaded', restoreFormData);
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset everything to default?')) {
+      localStorage.removeItem('oceanWatersData');
+      location.reload();
+    }
+  });
+
+  // ===================== Initialize =====================
+  window.addEventListener('DOMContentLoaded', function() {
+    updateCurrentDate();
+    updateSetDate();
+    updateUTCDate();
+    updateUTCdateShort();
+    updateSynopticDate();
+    initTimePicker();
+  });
+
+</script>
+</body>
+</html>

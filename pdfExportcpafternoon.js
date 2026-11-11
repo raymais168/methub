@@ -1,0 +1,429 @@
+document.getElementById("savePdfBtn").addEventListener("click", function () {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+  const pageWidth = 210;
+  let y = 25;
+
+  const container = document.querySelector(".container");
+  if (!container) return alert("Container not found!");
+
+  // --- helper to add text with alignment, font, and color ---
+  function addText(
+    text,
+    align = "left",
+    fontSize = 8,
+    fontStyle = "normal",
+    color = [0, 0, 0],
+    lineGap = 5,
+    underline = false
+  ) {
+    doc.setFont(undefined, fontStyle);
+    doc.setFontSize(fontSize);
+    doc.setTextColor(...color);
+
+    const lines = doc.splitTextToSize(text, pageWidth - 20);
+    lines.forEach((line) => {
+      let x = 10;
+      if (align === "center") x = pageWidth / 2;
+      else if (align === "right") x = pageWidth - 10;
+
+      doc.text(line, x, y, { align });
+
+      if (underline) {
+        const textWidth =
+          (doc.getStringUnitWidth(line) * fontSize) / doc.internal.scaleFactor;
+        let lineX = align === "center" ? pageWidth / 2 - textWidth / 2 : x;
+        if (align === "right") lineX = x - textWidth;
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.2);
+        doc.line(lineX, y + 1, lineX + textWidth, y + 1);
+      }
+
+      y += lineGap * 0.75;
+    });
+  }
+
+  // ===== HEADER SECTION =====
+  let headerY = 3;
+
+  // Logos
+  if (typeof img1 !== "undefined" && img1) {
+    doc.addImage(img1, "PNG", 10, headerY + 2, 22, 15);
+  }
+  if (typeof img2 !== "undefined" && img2) {
+    doc.addImage(img2, "PNG", pageWidth - 35, headerY + 2, 22, 13);
+  }
+
+  // Organization info
+  doc.setFontSize(11);
+  doc.setFont(undefined, "bold");
+  doc.setTextColor(0, 139, 139);
+  doc.text("PAPUA NEW GUINEA NATIONAL WEATHER SERVICE", pageWidth / 2, headerY + 5, { align: "center" });
+
+  doc.setFontSize(8);
+  doc.setFont(undefined, "normal");
+  doc.text("P.O. Box 1240, BOROKO, National Capital District, Papua New Guinea", pageWidth / 2, headerY + 10, { align: "center" });
+  doc.text("Telephone: (+675) 325 2788 or (+675) 325 5544   email: png.nws@gmail.com   Website: www.pngmet.gov.pg", pageWidth / 2, headerY + 14, { align: "center" });
+
+  // Header line
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(0, 139, 139);
+  doc.setLineWidth(0.35);
+  doc.line(10, headerY + 18, pageWidth - 10, headerY + 18);
+  y += 5;
+
+  // Document headers
+  const headerLeft = container.querySelector("h4:first-of-type")?.textContent.trim() || "ZCZC GOPNG";
+  const headerRight = container.querySelector("#current-Date")?.textContent.trim() || "";
+
+  doc.setFont("helvetica");
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.text(headerLeft, 10, y);
+  doc.text(headerRight, pageWidth - 10, y, { align: "right" });
+  y += 5;
+
+  addText("CENTRAL PROVINCE WEATHER FORECASTS", "center", 10, "bold", [0, 91, 137]);
+  addText("FOR TONIGHT TO TOMORROW", "center", 10, "bold", [0, 91, 137]);
+  y += 5;
+
+  // Forecast validity line
+  const beforeText = "FORECASTS FOR THE NEXT 24 HOURS VALID AT  ";
+  const redTime = " 8:00 PM";
+  const afterText = " AS ISSUED BY PAPUA NEW GUINEA NATIONAL WEATHER SERVICE.";
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  const totalWidth = (doc.getStringUnitWidth(beforeText + redTime + afterText) * 8) / doc.internal.scaleFactor;
+  const startX = (pageWidth - totalWidth) / 2;
+
+  doc.setTextColor(0, 0, 0);
+  doc.text(beforeText, startX, y);
+  const beforeWidth = (doc.getStringUnitWidth(beforeText) * 8) / doc.internal.scaleFactor;
+  doc.setTextColor(216, 41, 44);
+  doc.text(redTime, startX + beforeWidth, y);
+  const redWidth = (doc.getStringUnitWidth(redTime) * 8) / doc.internal.scaleFactor;
+  doc.setTextColor(0, 0, 0);
+  doc.text(afterText, startX + beforeWidth + redWidth, y);
+  y += 3;
+
+  y += 1.5;
+  addText(
+    "NB: FORECASTS AREA WITHIN 60 NAUTICAL MILES OR 111 KILOMETRES FROM THE COASTLINE.",
+    "center", 7, "italic", [0, 0, 0], 2
+  );
+  y += 6;
+
+  // ===== SYNOPTIC SITUATION heading =====
+  let synopticHeadingEl = container.querySelector('div[style*="text-decoration: underline"]');
+
+  if (synopticHeadingEl) {
+    const timeText = synopticHeadingEl.querySelector("span[style*='#D8292C']")?.textContent.trim() || "04:00 PM";
+    const dateSynops = container.querySelector("#dateSynops")?.textContent.trim() || "";
+    const utcText = container.querySelector("#UTCdate")?.textContent.trim() || "";
+
+    const beforeTime = "SYNOPTIC SITUATION AT ";
+    const afterTime = ` ${dateSynops ? dateSynops + " " : ""}[ ${utcText}0600 UTC ]`;
+
+    const lineText = beforeTime + timeText + afterTime;
+    doc.setFontSize(8);
+    doc.setFont(undefined, "bold");
+    doc.setTextColor(16, 91, 137);
+
+    const startX = 10;
+    doc.text(beforeTime, startX, y);
+
+    const beforeWidth = (doc.getStringUnitWidth(beforeTime) * 8) / doc.internal.scaleFactor;
+    doc.setTextColor(216, 41, 44);
+    doc.text(timeText, startX + beforeWidth, y);
+
+    const timeWidth = (doc.getStringUnitWidth(timeText) * 8) / doc.internal.scaleFactor;
+    doc.setTextColor(16, 91, 137);
+    doc.text(afterTime, startX + beforeWidth + timeWidth, y);
+
+    const totalWidth = (doc.getStringUnitWidth(lineText) * 8) / doc.internal.scaleFactor;
+    doc.setDrawColor(16, 91, 137);
+    doc.setLineWidth(0.2);
+    doc.line(startX, y + 1, startX + totalWidth, y + 1);
+
+    y += 6;
+  }
+
+  // ===== Bullet textbox contents =====
+  const bulletItems = container.querySelectorAll("#bulletTextbox li");
+  bulletItems.forEach((li) => {
+    doc.setFont("times", "italic");
+    addText("• " + li.textContent.trim(), "left", 8, "italic", [0, 0, 0], 4);
+  });
+
+  y += 4;
+
+  // Warnings
+  const warningContainer = container.querySelector(".warnings");
+  if (warningContainer) {
+    const w1 = warningContainer.children[0]?.textContent.trim() || "WARNINGS :";
+    const w2 = warningContainer.children[1]?.textContent.trim() || "";
+
+    const startX = 10;
+    const lineSpacing = 3;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(216, 41, 44);
+    doc.text(w1, startX, y);
+    const warningWidth = (doc.getStringUnitWidth(w1) * 7) / doc.internal.scaleFactor;
+
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(0, 0, 0);
+    const availableWidth = pageWidth - startX - warningWidth - 10;
+    const bodyLines = doc.splitTextToSize(w2, availableWidth);
+
+    doc.text(bodyLines[0], startX + warningWidth + 1.5, y);
+
+    for (let i = 1; i < bodyLines.length; i++) {
+      y += lineSpacing;
+      doc.text(bodyLines[i], startX + 1, y);
+    }
+
+    y += 5;
+  }
+
+  // ===== SINGLE UNIFIED TABLE FOR CENTRAL PROVINCE =====
+  try {
+    const margin = 10;
+    const contentWidth = pageWidth - (margin * 2);
+    const colWidth = contentWidth / 2;
+    
+    // Helper function to extract and format content
+    function getTableContent(selector) {
+      const element = document.querySelector(`.minor-weather-table ${selector}`);
+      if (!element) return '';
+      
+      const noteLines = element.querySelectorAll('.minor-note-line');
+      let content = '';
+      
+      noteLines.forEach(line => {
+        if (line.textContent.trim()) {
+          content += line.textContent.trim() + '\n';
+        }
+      });
+      
+      return content.trim();
+    }
+
+    // Helper function to calculate text height
+    function getTextHeight(text, width) {
+      const lines = doc.splitTextToSize(text, width - 10);
+      return (lines.length * 3.5) + 3;
+    }
+
+    // Set table styling
+    doc.setDrawColor(0, 91, 137); 
+    doc.setLineWidth(0.3);
+    
+    const tableStartY = y;
+
+    // Calculate row heights
+    const rowHeights = [];
+    
+    // Row 1: Waters header
+    rowHeights.push(5);
+    
+    // Row 2: Waters content
+    const watersContent = getTableContent('tr:nth-child(2)');
+    rowHeights.push(getTextHeight(watersContent, contentWidth));
+    
+    // Row 3: Two column headers
+    rowHeights.push(5);
+    
+    // Row 4: Two column content
+    const portMoresbyContent = getTableContent('tr:nth-child(4) td:first-child');
+    const kupianoContent = getTableContent('tr:nth-child(4) td:last-child');
+    rowHeights.push(Math.max(
+      getTextHeight(portMoresbyContent, colWidth),
+      getTextHeight(kupianoContent, colWidth)
+    ));
+    
+    // Row 5: Two column headers
+    rowHeights.push(5);
+    
+    // Row 6: Two column content
+    const kwikilaContent = getTableContent('tr:nth-child(6) td:first-child');
+    const lalokiContent = getTableContent('tr:nth-child(6) td:last-child');
+    rowHeights.push(Math.max(
+      getTextHeight(kwikilaContent, colWidth),
+      getTextHeight(lalokiContent, colWidth)
+    ));
+    
+    // Row 7: Two column headers
+    rowHeights.push(5);
+    
+    // Row 8: Two column content
+    const bereinaContent = getTableContent('tr:nth-child(8) td:first-child');
+    const woitapeContent = getTableContent('tr:nth-child(8) td:last-child');
+    rowHeights.push(Math.max(
+      getTextHeight(bereinaContent, colWidth),
+      getTextHeight(woitapeContent, colWidth)
+    ));
+    
+    // Row 9: Forecast header
+    rowHeights.push(5);
+    
+    // Row 10: Forecast content
+    const forecastContent = getTableContent('tr:nth-child(10) td');
+    rowHeights.push(getTextHeight(forecastContent, contentWidth));
+
+    // Draw the complete table structure
+    let rowY = tableStartY;
+    
+    // Draw all horizontal lines
+    doc.setLineWidth(0.1);
+    
+    for (let i = 0; i < rowHeights.length; i++) {
+      const rowHeight = rowHeights[i];
+      
+      // Skip bottom border for header rows
+      if (i !== 0 && i !== 2 && i !== 4 && i !== 6 && i !== 8) {
+        doc.line(margin, rowY + rowHeight, margin + contentWidth, rowY + rowHeight);
+      }
+      
+      // For two-column rows, draw vertical line
+      if (i === 2 || i === 3 || i === 4 || i === 5 || i === 6 || i === 7) {
+        doc.line(margin + colWidth, rowY, margin + colWidth, rowY + rowHeight);
+      }
+      
+      rowY += rowHeight;
+    }
+    
+    // Draw MAIN OUTER BORDER
+    doc.setLineWidth(0.3);
+    doc.rect(margin, tableStartY, contentWidth, rowY - tableStartY);
+
+    // Add centered text content
+    rowY = tableStartY;
+    const tableCenterX = pageWidth / 2;
+    const leftColCenterX = margin + (colWidth / 2);
+    const rightColCenterX = margin + colWidth + (colWidth / 2);
+    
+    // Row 1: Waters header
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(8);
+    doc.text('WATERS OF YULE ISLAND TO PORT MORESBY TO HOODPOINT TO SAMARAI ISLAND:', tableCenterX, rowY + 3, { align: 'center' });
+    rowY += rowHeights[0];
+    
+    // Row 2: Waters content
+    doc.setFont(undefined, 'normal');
+    const watersLines = doc.splitTextToSize(watersContent, contentWidth - 10);
+    watersLines.forEach((line, index) => {
+      doc.text(line, tableCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    rowY += rowHeights[1];
+    
+    // Row 3: Two column headers
+    doc.setFont(undefined, 'bold');
+    doc.text('PORT MORESBY:', leftColCenterX, rowY + 3, { align: 'center' });
+    doc.text('KUPIANO:', rightColCenterX, rowY + 3, { align: 'center' });
+    rowY += rowHeights[2];
+    
+    // Row 4: Two column content
+    doc.setFont(undefined, 'normal');
+    const portMoresbyLines = doc.splitTextToSize(portMoresbyContent, colWidth - 10);
+    const kupianoLines = doc.splitTextToSize(kupianoContent, colWidth - 10);
+    
+    portMoresbyLines.forEach((line, index) => {
+      doc.text(line, leftColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    kupianoLines.forEach((line, index) => {
+      doc.text(line, rightColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    rowY += rowHeights[3];
+    
+    // Row 5: Two column headers (KWIKILA & LALOKI)
+    doc.setFont(undefined, 'bold');
+    doc.text('KWIKILA:', leftColCenterX, rowY + 3, { align: 'center' });
+    doc.text('LALOKI:', rightColCenterX, rowY + 3, { align: 'center' });
+    rowY += rowHeights[4];
+    
+    // Row 6: Two column content (KWIKILA & LALOKI)
+    doc.setFont(undefined, 'normal');
+    const kwikilaLines = doc.splitTextToSize(kwikilaContent, colWidth - 10);
+    const lalokiLines = doc.splitTextToSize(lalokiContent, colWidth - 10);
+    
+    kwikilaLines.forEach((line, index) => {
+      doc.text(line, leftColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    lalokiLines.forEach((line, index) => {
+      doc.text(line, rightColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    rowY += rowHeights[5];
+    
+    // Row 7: Two column headers (BEREINA & WOITAPE)
+    doc.setFont(undefined, 'bold');
+    doc.text('BEREINA:', leftColCenterX, rowY + 3, { align: 'center' });
+    doc.text('WOITAPE, TAPINI & SOGERI:', rightColCenterX, rowY + 3, { align: 'center' });
+    rowY += rowHeights[6];
+    
+    // Row 8: Two column content (BEREINA & WOITAPE)
+    doc.setFont(undefined, 'normal');
+    const bereinaLines = doc.splitTextToSize(bereinaContent, colWidth - 10);
+    const woitapeLines = doc.splitTextToSize(woitapeContent, colWidth - 10);
+    
+    bereinaLines.forEach((line, index) => {
+      doc.text(line, leftColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    woitapeLines.forEach((line, index) => {
+      doc.text(line, rightColCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+    rowY += rowHeights[7];
+    
+    // Row 9: Forecast header
+    doc.setFont(undefined, 'bold');
+    doc.text('FORECAST FOR CENTRAL PROVINCE:', tableCenterX, rowY + 3, { align: 'center' });
+    rowY += rowHeights[8];
+    
+    // Row 10: Forecast content
+    doc.setFont(undefined, 'normal');
+    const forecastLines = doc.splitTextToSize(forecastContent, contentWidth - 10);
+    forecastLines.forEach((line, index) => {
+      doc.text(line, tableCenterX, rowY + 2 + (index * 3.5), { align: 'center' });
+    });
+
+    y = rowY + 10;
+
+    // Add NB note below the table
+    doc.setFont(undefined, 'italic');
+    doc.setFontSize(7);
+    doc.text('NB: Squally or gusty winds are expected to accompany areas with severe thunderstorms.', tableCenterX, y, { align: 'center' });
+    y += 8;
+
+  } catch (error) {
+    console.error('Error drawing table:', error);
+    doc.setFont(undefined, 'normal');
+    doc.text('Error displaying weather table', 10, y);
+    y += 10;
+  }
+
+  // ===== BOTTOM SECTION =====
+  const bottomDivs = container.querySelectorAll(".bottom-end > div");
+  const xPositions = [10, 35, 55, 75, 100, 130];
+
+  bottomDivs.forEach((div, i) => {
+    let text = div.textContent.trim();
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(text, xPositions[i] || 10, y);
+  });
+
+  y += 3;
+  addText("NNNN", "left", 8, "normal", [0, 0, 0]);
+
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yy = String(now.getFullYear()).slice(-2);
+  const currentDate = `${dd}${mm}${yy}`;
+
+  const fileName = `CentralProvince_Forecast_for_Tonight(${currentDate}).pdf`;
+  doc.save(fileName);
+});

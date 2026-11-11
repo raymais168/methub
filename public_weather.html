@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PNG Public Weather Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f8;
+        }
+
+        h2 {
+            margin: 0 0 10px 5px;
+            color: #0c151f;
+            font-size: 1.3rem;
+        }
+
+        #map { 
+            height: calc(100vh - 60px); 
+            min-height: 400px; 
+            width: 100%; 
+            border: 2px solid #198898; 
+            border-radius: 8px; 
+        }
+
+        .weather-popup { 
+            font-size: 13px; 
+            line-height: 1.4; 
+        }
+
+        .custom-weather-icon { 
+            text-align: center; 
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            h2 {
+                font-size: 1.1rem;
+                margin-bottom: 5px;
+            }
+            #map {
+                height: calc(100vh - 50px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>PNG Weather Map</h2>
+    <div id="map"></div>
+
+    <!-- Load Leaflet Map Library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // 1. Initialize the map centered on PNG with mobile-friendly zoom settings
+        const map = L.map('map', {
+            tap: true,
+            dragging: true
+        }).setView([-6.314993, 143.955550], 6); 
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            referrerPolicy: 'strict-origin-when-cross-origin'
+        }).addTo(map);
+
+        // 2. Coordinates for all 23 towns
+        const townCoordinates = {
+            "Port Moresby": [-9.4438, 147.1803], "Lae": [-6.7211, 147.0036],
+            "Mt Hagen": [-5.8584, 144.2286], "Madang": [-5.2245, 145.7853],
+            "Goroka": [-6.0833, 145.3833], "Wewak": [-3.5500, 143.6333],
+            "Daru": [-9.0833, 143.2000], "Alotau": [-10.3167, 150.4333],
+            "Popondetta": [-8.7667, 148.2333], "Kimbe": [-5.5500, 150.1333],
+            "Kokopo": [-4.3333, 152.2667], "Kavieng": [-2.5667, 150.8000],
+            "Buka": [-5.4167, 154.6667], "Vanimo": [-2.6833, 141.3000],
+            "Lorengau": [-2.0333, 147.2667], "Kerema": [-7.9667, 145.7667],
+            "Kundiawa": [-6.0167, 144.9667], "Wabag": [-5.4833, 143.7000],
+            "Mendi": [-6.1500, 143.6500], "Tari": [-5.8500, 142.9500],
+            "Banz": [-5.7833, 144.6167]
+        };
+
+        // 3. Function to pick the weather icon
+        function getWeatherIcon(weatherText) {
+            const text = (weatherText || '').toLowerCase();
+            let iconHtml = '<i class="fa-solid fa-cloud-sun" style="color: #f39c12; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>'; 
+            
+            if (text.includes('rain') || text.includes('shower')) iconHtml = '<i class="fa-solid fa-cloud-showers-heavy" style="color: #3498db; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>';
+            else if (text.includes('thunder')) iconHtml = '<i class="fa-solid fa-cloud-bolt" style="color: #e74c3c; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>';
+            else if (text.includes('cloud')) iconHtml = '<i class="fa-solid fa-cloud" style="color: #95a5a6; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>';
+            else if (text.includes('sun') || text.includes('clear') || text.includes('fine')) iconHtml = '<i class="fa-solid fa-sun" style="color: #f1c40f; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>';
+            else if (text.includes('fog')) iconHtml = '<i class="fa-solid fa-smog" style="color: #bdc3c7; font-size: 24px; text-shadow: 1px 1px 2px black;"></i>';
+            
+            return L.divIcon({ html: iconHtml, className: 'custom-weather-icon', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
+        }
+
+        // --- 4. LOAD GEOJSON REGIONS FIRST ---
+        fetch('png_four_regions.geojson')
+            .then(response => {
+                if (!response.ok) throw new Error('GeoJSON file not found');
+                return response.json();
+            })
+            .then(geoData => {
+                L.geoJSON(geoData, {
+                    style: function(feature) {
+                        return {
+                            color: feature.properties.color || '#F7C310',
+                            weight: 1.5,
+                            fillColor: feature.properties.color || '#198898',
+                            fillOpacity: 0.15
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const regionName = feature.properties.region;
+                        layer.bindPopup(`<b>${regionName} Region</b><br>Loading weather...`);
+                    }
+                }).bringToBack().addTo(map);
+            })
+            .catch(err => console.error("Error loading GeoJSON:", err));
+
+        // --- 5. LOAD WEATHER DATA SECOND ---
+        fetch(`http://172.16.1.111:3000/forecast-reports?t=${new Date().getTime()}`)
+            .then(response => response.json())
+            .then(reports => {
+                if (reports.length === 0) {
+                    alert("No weather data saved yet. Go to the Dashboard and save a forecast first!");
+                    return;
+                }
+                
+                const latestId = reports[0].id;
+                return fetch(`http://172.16.1.111:3000/forecast-reports/${latestId}?t=${new Date().getTime()}`);
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data) return;
+
+                // Draw Towns
+                if (data.towns) {
+                    data.towns.forEach(town => {
+                        const name = town.town_name;
+                        const coords = townCoordinates[name];
+
+                        if (coords) {
+                            const weatherIcon = getWeatherIcon(town.weather);
+                            const popupContent = `
+                                <div class="weather-popup">
+                                    <strong>${name}</strong><br>
+                                    <b>Weather:</b> ${town.weather || 'N/A'}<br>
+                                    <b>Wind:</b> ${town.wind || 'N/A'}<br>
+                                    <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
+                                    <b>Min Temp:</b> ${town.min_temp || 'N/A'}°C
+                                </div>
+                            `;
+                            L.marker(coords, { icon: weatherIcon })
+                                .addTo(map)
+                                .bindPopup(popupContent);
+                        }
+                    });
+                }
+
+                // Update Region Popups with actual weather data
+                if (data.regions) {
+                    data.regions.forEach(region => {
+                        const name = region.region_name;
+                        
+                        map.eachLayer(layer => {
+                            if (layer.feature && layer.feature.properties.region === name) {
+                                layer.setPopupContent(`
+                                    <div style="font-family: Arial;">
+                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${name} Region</h3>
+                                        <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${region.weather || 'N/A'}</p>
+                                    </div>
+                                `);
+                            }
+                        });
+                    });
+                }
+            })
+            .catch(err => console.error("Error loading weather data:", err));
+
+        // --- 6. ADD LEGEND ---
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.style.background = 'white';
+            div.style.padding = '8px 10px';
+            div.style.borderRadius = '5px';
+            div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
+            div.style.fontFamily = 'Arial, sans-serif';
+            div.style.fontSize = '12px';
+            
+            div.innerHTML = `
+                <h4 style="margin: 0 0 5px 0; font-size: 13px;">Weather</h4>
+                <div><i class="fa-solid fa-sun" style="color: #f1c40f;"></i> Clear / Sunny</div>
+                <div><i class="fa-solid fa-cloud-sun" style="color: #f39c12;"></i> Partly Cloudy</div>
+                <div><i class="fa-solid fa-cloud" style="color: #95a5a6;"></i> Cloudy</div>
+                <div><i class="fa-solid fa-cloud-showers-heavy" style="color: #3498db;"></i> Rain / Showers</div>
+                <div><i class="fa-solid fa-cloud-bolt" style="color: #e74c3c;"></i> Thunderstorms</div>
+                <hr style="margin: 4px 0;">
+                <div><span style="display:inline-block; width:12px; height:12px; background:rgba(25, 136, 152, 0.3); border: 2px solid #F7C310; vertical-align:middle; margin-right:4px;"></span> Region</div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+</body>
+</html>

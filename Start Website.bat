@@ -1,0 +1,2 @@
+cd C:\pngnws_templates
+node server.js
