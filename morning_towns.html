@@ -884,8 +884,8 @@
             regions: regions
         };
 
-        // 3. Send to Node.js server
-        fetch('http://localhost:3000/save-forecast', {
+        // 3. Send to Netlify Function
+        fetch('/.netlify/functions/save-forecast', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -903,7 +903,7 @@
             }
         })
         .catch(err => {
-            alert(`⚠️ Saved locally, but couldn't reach server. Is node running?`);
+            alert(`⚠️ Saved locally, but couldn't reach the database server.`);
             console.error(err);
         });
     }
