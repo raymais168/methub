@@ -132,20 +132,64 @@
             .catch(err => console.error("Error loading GeoJSON:", err));
 
         // --- 5. LOAD WEATHER DATA SECOND ---
-        fetch(`http://172.16.1.111:3000/forecast-reports?t=${new Date().getTime()}`)
+            fetch(`/.netlify/functions/get-forecast`)
             .then(response => response.json())
             .then(reports => {
-                if (reports.length === 0) {
+                if (!reports || reports.length === 0) {
                     alert("No weather data saved yet. Go to the Dashboard and save a forecast first!");
                     return;
                 }
                 
-                const latestId = reports[0].id;
-                return fetch(`http://172.16.1.111:3000/forecast-reports/${latestId}?t=${new Date().getTime()}`);
+                // Since our function returns an array with the latest forecast, we grab the first one
+                const data = reports[0];
+                
+                // Convert the JSONB data from Neon back into JavaScript objects
+                const townsData = data.towns;
+                const regionsData = data.regions;
+
+                // Draw Towns
+                if (townsData) {
+                    Object.keys(townsData).forEach(name => {
+                        const town = townsData[name];
+                        const coords = townCoordinates[name];
+
+                        if (coords) {
+                            const weatherIcon = getWeatherIcon(town.weather);
+                            const popupContent = `
+                                <div class="weather-popup">
+                                    <strong>${name}</strong><br>
+                                    <b>Weather:</b> ${town.weather || 'N/A'}<br>
+                                    <b>Wind:</b> ${town.wind || 'N/A'}<br>
+                                    <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
+                                    <b>Min Temp:</b> ${town.min_temp || 'N/A'}°C
+                                </div>
+                            `;
+                            L.marker(coords, { icon: weatherIcon })
+                                .addTo(map)
+                                .bindPopup(popupContent);
+                        }
+                    });
+                }
+
+                // Update Region Popups with actual weather data
+                if (regionsData) {
+                    Object.keys(regionsData).forEach(name => {
+                        const regionWeather = regionsData[name];
+                        
+                        map.eachLayer(layer => {
+                            if (layer.feature && layer.feature.properties.region === name) {
+                                layer.setPopupContent(`
+                                    <div style="font-family: Arial;">
+                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${name} Region</h3>
+                                        <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${regionWeather || 'N/A'}</p>
+                                    </div>
+                                `);
+                            }
+                        });
+                    });
+                }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (!data) return;
+            .catch(err => console.error("Error loading weather data:", err));
 
                 // Draw Towns
                 if (data.towns) {
