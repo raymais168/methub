@@ -132,7 +132,8 @@
             .catch(err => console.error("Error loading GeoJSON:", err));
 
         // --- 5. LOAD WEATHER DATA SECOND ---
-            fetch(`/.netlify/functions/get-forecast`)
+            // --- 5. LOAD WEATHER DATA SECOND ---
+        fetch('/.netlify/functions/get-forecast')
             .then(response => response.json())
             .then(reports => {
                 if (!reports || reports.length === 0) {
@@ -146,18 +147,19 @@
                 // Convert the JSONB data from Neon back into JavaScript objects
                 const townsData = data.towns;
                 const regionsData = data.regions;
-
-                // Draw Towns
+// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                // 1. Draw Towns
                 if (townsData) {
-                    Object.keys(townsData).forEach(name => {
-                        const town = townsData[name];
-                        const coords = townCoordinates[name];
+                    // FIX: Use Object.keys to loop through the JSON object
+                    Object.keys(townsData).forEach(townName => {
+                        const town = townsData[townName];
+                        const coords = townCoordinates[townName];
 
                         if (coords) {
                             const weatherIcon = getWeatherIcon(town.weather);
                             const popupContent = `
                                 <div class="weather-popup">
-                                    <strong>${name}</strong><br>
+                                    <strong>${townName}</strong><br>
                                     <b>Weather:</b> ${town.weather || 'N/A'}<br>
                                     <b>Wind:</b> ${town.wind || 'N/A'}<br>
                                     <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
@@ -171,16 +173,17 @@
                     });
                 }
 
-                // Update Region Popups with actual weather data
+                // 2. Update Region Popups with actual weather data
                 if (regionsData) {
-                    Object.keys(regionsData).forEach(name => {
-                        const regionWeather = regionsData[name];
+                    // FIX: Use Object.keys to loop through the JSON object
+                    Object.keys(regionsData).forEach(regionName => {
+                        const regionWeather = regionsData[regionName];
                         
                         map.eachLayer(layer => {
-                            if (layer.feature && layer.feature.properties.region === name) {
+                            if (layer.feature && layer.feature.properties.region === regionName) {
                                 layer.setPopupContent(`
                                     <div style="font-family: Arial;">
-                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${name} Region</h3>
+                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${regionName} Region</h3>
                                         <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${regionWeather || 'N/A'}</p>
                                     </div>
                                 `);
