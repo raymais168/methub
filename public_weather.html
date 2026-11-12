@@ -67,7 +67,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
-        // 1. Initialize the map centered on PNG with mobile-friendly zoom settings
+        // 1. Initialize the map
         const map = L.map('map', {
             tap: true,
             dragging: true
@@ -78,7 +78,7 @@
             referrerPolicy: 'strict-origin-when-cross-origin'
         }).addTo(map);
 
-        // 2. Coordinates for all 23 towns
+        // 2. Coordinates for all towns
         const townCoordinates = {
             "Port Moresby": [-9.4438, 147.1803], "Lae": [-6.7211, 147.0036],
             "Mt Hagen": [-5.8584, 144.2286], "Madang": [-5.2245, 145.7853],
@@ -107,14 +107,18 @@
             return L.divIcon({ html: iconHtml, className: 'custom-weather-icon', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
         }
 
-        // --- 4. LOAD GEOJSON REGIONS FIRST ---
+        // Variables to hold map layers so we can access them after both fetch requests finish
+        let regionsGeoJsonLayer = null;
+        let latestWeatherData = null;
+
+        // 4. LOAD GEOJSON REGIONS
         fetch('png_four_regions.geojson')
             .then(response => {
                 if (!response.ok) throw new Error('GeoJSON file not found');
                 return response.json();
             })
             .then(geoData => {
-                L.geoJSON(geoData, {
+                regionsGeoJsonLayer = L.geoJSON(geoData, {
                     style: function(feature) {
                         return {
                             color: feature.properties.color || '#F7C310',
@@ -124,15 +128,18 @@
                         };
                     },
                     onEachFeature: function(feature, layer) {
-                        const regionName = feature.properties.region;
-                        layer.bindPopup(`<b>${regionName} Region</b><br>Loading weather...`);
+                        layer.bindPopup(`<b>${feature.properties.region} Region</b><br>Loading weather...`);
                     }
-                }).bringToBack().addTo(map);
+                }).addTo(map);
+                
+                // If weather data arrived before the map finished loading, draw it now
+                if (latestWeatherData) {
+                    drawWeatherOnMap(latestWeatherData);
+                }
             })
             .catch(err => console.error("Error loading GeoJSON:", err));
 
-        // --- 5. LOAD WEATHER DATA SECOND ---
-            // --- 5. LOAD WEATHER DATA SECOND ---
+        // 5. LOAD WEATHER DATA
         fetch('/.netlify/functions/get-forecast')
             .then(response => response.json())
             .then(reports => {
@@ -141,104 +148,64 @@
                     return;
                 }
                 
-                // Since our function returns an array with the latest forecast, we grab the first one
-                const data = reports[0];
+                latestWeatherData = reports[0];
                 
-                // Convert the JSONB data from Neon back into JavaScript objects
-                const townsData = data.towns;
-                const regionsData = data.regions;
-// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                // 1. Draw Towns
-                if (townsData) {
-                    // FIX: Use Object.keys to loop through the JSON object
-                    Object.keys(townsData).forEach(townName => {
-                        const town = townsData[townName];
-                        const coords = townCoordinates[townName];
-
-                        if (coords) {
-                            const weatherIcon = getWeatherIcon(town.weather);
-                            const popupContent = `
-                                <div class="weather-popup">
-                                    <strong>${townName}</strong><br>
-                                    <b>Weather:</b> ${town.weather || 'N/A'}<br>
-                                    <b>Wind:</b> ${town.wind || 'N/A'}<br>
-                                    <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
-                                    <b>Min Temp:</b> ${town.min_temp || 'N/A'}°C
-                                </div>
-                            `;
-                            L.marker(coords, { icon: weatherIcon })
-                                .addTo(map)
-                                .bindPopup(popupContent);
-                        }
-                    });
-                }
-
-                // 2. Update Region Popups with actual weather data
-                if (regionsData) {
-                    // FIX: Use Object.keys to loop through the JSON object
-                    Object.keys(regionsData).forEach(regionName => {
-                        const regionWeather = regionsData[regionName];
-                        
-                        map.eachLayer(layer => {
-                            if (layer.feature && layer.feature.properties.region === regionName) {
-                                layer.setPopupContent(`
-                                    <div style="font-family: Arial;">
-                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${regionName} Region</h3>
-                                        <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${regionWeather || 'N/A'}</p>
-                                    </div>
-                                `);
-                            }
-                        });
-                    });
+                // If the GeoJSON finished loading before the weather, draw it now
+                if (regionsGeoJsonLayer) {
+                    drawWeatherOnMap(latestWeatherData);
                 }
             })
             .catch(err => console.error("Error loading weather data:", err));
 
-                // Draw Towns
-                if (data.towns) {
-                    data.towns.forEach(town => {
-                        const name = town.town_name;
-                        const coords = townCoordinates[name];
+        // 6. Function to actually draw everything once data is ready
+        function drawWeatherOnMap(data) {
+            const townsData = data.towns;
+            const regionsData = data.regions;
 
-                        if (coords) {
-                            const weatherIcon = getWeatherIcon(town.weather);
-                            const popupContent = `
-                                <div class="weather-popup">
-                                    <strong>${name}</strong><br>
-                                    <b>Weather:</b> ${town.weather || 'N/A'}<br>
-                                    <b>Wind:</b> ${town.wind || 'N/A'}<br>
-                                    <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
-                                    <b>Min Temp:</b> ${town.min_temp || 'N/A'}°C
+            // Draw Towns
+            if (townsData) {
+                Object.keys(townsData).forEach(townName => {
+                    const town = townsData[townName];
+                    const coords = townCoordinates[townName];
+
+                    if (coords) {
+                        const weatherIcon = getWeatherIcon(town.weather);
+                        const popupContent = `
+                            <div class="weather-popup">
+                                <strong>${townName}</strong><br>
+                                <b>Weather:</b> ${town.weather || 'N/A'}<br>
+                                <b>Wind:</b> ${town.wind || 'N/A'}<br>
+                                <b>Max Temp:</b> ${town.max_temp || 'N/A'}°C<br>
+                                <b>Min Temp:</b> ${town.min_temp || 'N/A'}°C
+                            </div>
+                        `;
+                        L.marker(coords, { icon: weatherIcon })
+                            .addTo(map)
+                            .bindPopup(popupContent);
+                    }
+                });
+            }
+
+            // Update Region Popups
+            if (regionsData) {
+                Object.keys(regionsData).forEach(regionName => {
+                    const regionWeather = regionsData[regionName];
+                    
+                    map.eachLayer(layer => {
+                        if (layer.feature && layer.feature.properties.region === regionName) {
+                            layer.setPopupContent(`
+                                <div style="font-family: Arial;">
+                                    <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${regionName} Region</h3>
+                                    <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${regionWeather || 'N/A'}</p>
                                 </div>
-                            `;
-                            L.marker(coords, { icon: weatherIcon })
-                                .addTo(map)
-                                .bindPopup(popupContent);
+                            `);
                         }
                     });
-                }
+                });
+            }
+        }
 
-                // Update Region Popups with actual weather data
-                if (data.regions) {
-                    data.regions.forEach(region => {
-                        const name = region.region_name;
-                        
-                        map.eachLayer(layer => {
-                            if (layer.feature && layer.feature.properties.region === name) {
-                                layer.setPopupContent(`
-                                    <div style="font-family: Arial;">
-                                        <h3 style="margin: 0 0 5px 0; color: #198898; font-size:14px;">${name} Region</h3>
-                                        <p style="margin: 0; font-size: 13px;"><b>Forecast:</b> ${region.weather || 'N/A'}</p>
-                                    </div>
-                                `);
-                            }
-                        });
-                    });
-                }
-            })
-            .catch(err => console.error("Error loading weather data:", err));
-
-        // --- 6. ADD LEGEND ---
+        // 7. ADD LEGEND
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function (map) {
             const div = L.DomUtil.create('div', 'info legend');
